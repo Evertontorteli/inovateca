@@ -105,7 +105,7 @@ export function NotificacoesSino() {
               <Link
                 to={
                   usuarioAtual?.perfil === 'admin'
-                    ? '/admin/notificacoes'
+                    ? '/admin/configuracoes?aba=notificacoes'
                     : '/app/notificacoes'
                 }
                 className="text-xs font-medium text-brand hover:underline"

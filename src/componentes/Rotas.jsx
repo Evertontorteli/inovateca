@@ -54,7 +54,10 @@ export function Rotas() {
         <Route path="emprestimos" element={<EmprestimosAdmin />} />
         <Route path="devolucao" element={<DevolucaoAdmin />} />
         <Route path="configuracoes" element={<ConfiguracoesAdmin />} />
-        <Route path="notificacoes" element={<NotificacoesPagina />} />
+        <Route
+          path="notificacoes"
+          element={<Navigate to="/admin/configuracoes?aba=notificacoes" replace />}
+        />
       </Route>
 
       <Route

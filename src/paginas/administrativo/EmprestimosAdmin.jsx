@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { formatarData } from '../../utilitarios/datas.js'
@@ -9,11 +9,35 @@ export default function EmprestimosAdmin() {
   const { toast } = useToast()
   const [usuarioId, setUsuarioId] = useState(estado.usuarios[0]?.id || '')
   const [livroId, setLivroId] = useState(estado.livros[0]?.id || '')
+  const [modalAberto, setModalAberto] = useState(false)
 
   const ativos = useMemo(
     () => emprestimosComStatus.filter((e) => e.status === 'ativo'),
     [emprestimosComStatus],
   )
+
+  const fecharModal = useCallback(() => {
+    setModalAberto(false)
+  }, [])
+
+  function abrirModal() {
+    if (!usuarioId && estado.usuarios[0]?.id) setUsuarioId(estado.usuarios[0].id)
+    if (!livroId && estado.livros[0]?.id) setLivroId(estado.livros[0].id)
+    setModalAberto(true)
+  }
+
+  useEffect(() => {
+    if (!modalAberto) return undefined
+    document.body.style.overflow = 'hidden'
+    function aoTecla(e) {
+      if (e.key === 'Escape') fecharModal()
+    }
+    document.addEventListener('keydown', aoTecla)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', aoTecla)
+    }
+  }, [modalAberto, fecharModal])
 
   function nomeLivro(id) {
     return estado.livros.find((l) => l.id === id)?.titulo || '—'
@@ -30,54 +54,118 @@ export default function EmprestimosAdmin() {
       return
     }
     toast.success('Empréstimo registrado.')
+    fecharModal()
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Empréstimos</h1>
-      <p className="mt-1 text-slate-600">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Empréstimos</h1>
+          <p className="mt-1 text-slate-600 dark:text-slate-400">
         Prazos calculados a partir das configurações do sistema.
-      </p>
-
-      <form
-        className="mt-8 grid gap-4 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 p-4 md:grid-cols-3 md:items-end md:p-6"
-        onSubmit={registrarDireto}
-      >
-        <div>
-          <label className="text-sm font-medium text-slate-700">Usuário</label>
-          <select
-            className="campo-formulario mt-1"
-            value={usuarioId}
-            onChange={(e) => setUsuarioId(e.target.value)}
-          >
-            {estado.usuarios.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.nome} ({u.email})
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-slate-700">Livro</label>
-          <select
-            className="campo-formulario mt-1"
-            value={livroId}
-            onChange={(e) => setLivroId(e.target.value)}
-          >
-            {estado.livros.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.titulo} — {l.exemplaresDisponiveis} disp.
-              </option>
-            ))}
-          </select>
+          </p>
         </div>
         <button
-          type="submit"
-          className="h-10 rounded-lg bg-brand text-sm font-semibold text-white hover:bg-brand-hover"
+          type="button"
+          onClick={abrirModal}
+          disabled={estado.usuarios.length === 0 || estado.livros.length === 0}
+          className="shrink-0 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
         >
-          Registrar empréstimo direto
+          Novo empréstimo
         </button>
-      </form>
+      </div>
+
+      {modalAberto && (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:items-center"
+          role="presentation"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+            aria-label="Fechar"
+            onClick={fecharModal}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-emprestimo-titulo"
+            className="relative z-10 flex max-h-[min(92vh,560px)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+              <h2
+                id="modal-emprestimo-titulo"
+                className="text-lg font-medium text-slate-900 dark:text-slate-100"
+              >
+                Novo empréstimo direto
+              </h2>
+              <button
+                type="button"
+                onClick={fecharModal}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                aria-label="Fechar modal"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form className="flex min-h-0 flex-1 flex-col overflow-y-auto" onSubmit={registrarDireto}>
+              <div className="space-y-4 px-4 py-4 md:px-6">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Usuário</label>
+                  <select
+                    className="campo-formulario mt-1.5"
+                    value={usuarioId}
+                    onChange={(e) => setUsuarioId(e.target.value)}
+                    required
+                  >
+                    {estado.usuarios.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.nome} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Livro</label>
+                  <select
+                    className="campo-formulario mt-1.5"
+                    value={livroId}
+                    onChange={(e) => setLivroId(e.target.value)}
+                    required
+                  >
+                    {estado.livros.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.titulo} — {l.exemplaresDisponiveis} disp.
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-200 px-4 py-4 dark:border-slate-700 md:px-6">
+                <button type="button" className="botao-formulario-secundario" onClick={fecharModal}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+                >
+                  Registrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <h2 className="mt-10 text-lg font-semibold text-slate-800">Em aberto</h2>
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">

@@ -165,7 +165,6 @@ const links = [
   { to: '/admin/emprestimos', label: 'Empréstimos', Icon: IconeEmprestimos },
   { to: '/admin/devolucao', label: 'Devolução', Icon: IconeDevolucao },
   { to: '/admin/configuracoes', label: 'Configurações', Icon: IconeConfiguracoes },
-  { to: '/admin/notificacoes', label: 'Notificações', Icon: IconeNotificacoes },
 ]
 
 const CHAVE_SIDEBAR_ICONES = 'inovateca_admin_sidebar_icones'
@@ -323,36 +322,6 @@ export function LayoutAdministrativo() {
             )
           })}
         </nav>
-        <div
-          className={`absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-900 md:static ${
-            sidebarSoIcones ? 'p-3 md:p-2 md:px-2' : 'p-3'
-          }`}
-        >
-          <div className={sidebarSoIcones ? 'md:hidden' : ''}>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{usuarioAtual?.nome}</p>
-            <p className="truncate text-xs text-slate-400 dark:text-slate-500">{usuarioAtual?.email}</p>
-          </div>
-          <button
-            type="button"
-            className={`flex w-full items-center justify-center rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 ${
-              sidebarSoIcones
-                ? 'mt-2 py-2 md:mt-2 md:aspect-square md:min-h-[2.5rem] md:max-h-[2.5rem] md:py-0'
-                : 'mt-2 py-2'
-            }`}
-            title="Sair"
-            onClick={() => {
-              encerrarSessao()
-              setMenuAberto(false)
-            }}
-          >
-            <span className={sidebarSoIcones ? 'md:sr-only' : ''}>Sair</span>
-            {sidebarSoIcones && (
-              <span className="hidden md:inline-flex md:items-center md:justify-center" aria-hidden>
-                <IconeSair />
-              </span>
-            )}
-          </button>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
