@@ -9,6 +9,7 @@ import { AVATAR_PADRAO_URL } from '../utilitarios/avatarsPredefinidos.js'
 import {
   carregarEstado,
   novoId,
+  reiniciarDemonstracao,
   salvarEstado,
 } from '../servicos/armazenamentoBiblioteca.js'
 
@@ -446,6 +447,12 @@ export function BibliotecaProvedor({ children }) {
     }))
   }, [])
 
+  const reiniciarDadosDemo = useCallback(() => {
+    const inicial = reiniciarDemonstracao()
+    setEstado(inicial)
+    return inicial
+  }, [])
+
   const emprestimosComStatus = useMemo(() => {
     const hoje = new Date()
     return estado.emprestimos.map((e) => {
@@ -477,6 +484,7 @@ export function BibliotecaProvedor({ children }) {
       marcarNotificacaoLida,
       marcarTodasNotificacoesLidas,
       atualizarConfiguracao,
+      reiniciarDadosDemo,
     }),
     [
       estado,
@@ -499,6 +507,7 @@ export function BibliotecaProvedor({ children }) {
       marcarNotificacaoLida,
       marcarTodasNotificacoesLidas,
       atualizarConfiguracao,
+      reiniciarDadosDemo,
     ],
   )
 

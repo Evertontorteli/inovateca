@@ -8,9 +8,9 @@ import {
 
 const ToastContexto = createContext(null)
 
-const DURACAO_PADRAO_MS = 4200
+const DURACAO_PADRAO_MS = 6000
 
-/** Toasts globais (canto inferior direito), alinhados ao tema claro/escuro. */
+/** Toasts globais (canto superior direito), alinhados ao tema claro/escuro. */
 export function useToast() {
   const ctx = useContext(ToastContexto)
   if (!ctx) {
@@ -64,7 +64,7 @@ export function ToastProvedor({ children }) {
     <ToastContexto.Provider value={valor}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[200] flex w-[min(100vw-2rem,22rem)] flex-col gap-2"
+        className="pointer-events-none fixed right-4 top-4 z-[200] flex w-[min(100vw-2rem,22rem)] flex-col gap-2"
         aria-live="polite"
       >
         {itens.map((t) => (

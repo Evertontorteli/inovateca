@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
@@ -7,6 +7,8 @@ import { NOME_SISTEMA } from '../../utilitarios/marca.js'
 import { NotificacoesSino } from '../NotificacoesSino.jsx'
 import { MenuContaUsuario } from '../MenuContaUsuario.jsx'
 import { SeletorTema } from '../SeletorTema.jsx'
+
+const CHAVE_SIDEBAR_ICONES_USUARIO = 'inovateca_sidebar_usuario_icones_v1'
 
 /** Ícones outline 20×20 — herdando `currentColor`. */
 const icone = 'h-5 w-5 shrink-0'
@@ -82,6 +84,22 @@ export function LayoutUsuario() {
   const { usuarioAtual, logout } = useAutenticacao()
   const { toast } = useToast()
   const [menuAberto, setMenuAberto] = useState(false)
+  /** No desktop (md+): menu só com ícones; no mobile o drawer permanece largura completa. */
+  const [sidebarSoIcones, setSidebarSoIcones] = useState(() => {
+    try {
+      return localStorage.getItem(CHAVE_SIDEBAR_ICONES_USUARIO) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAVE_SIDEBAR_ICONES_USUARIO, sidebarSoIcones ? '1' : '0')
+    } catch {
+      /* ignore */
+    }
+  }, [sidebarSoIcones])
 
   function encerrarSessao() {
     toast.info('Sessão encerrada.')
@@ -125,15 +143,15 @@ export function LayoutUsuario() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-60 transform border-r border-slate-200 bg-white shadow-xl transition-transform dark:border-slate-700 dark:bg-slate-900 md:static md:translate-x-0 md:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 w-60 transform border-r border-slate-200 bg-white shadow-xl transition-transform dark:border-slate-700 dark:bg-slate-900 md:static md:translate-x-0 md:shadow-none md:overflow-x-hidden md:transition-[width] md:duration-200 md:ease-out ${
           menuAberto ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${sidebarSoIcones ? 'md:w-[4.5rem]' : 'md:w-60'}`}
       >
-        <div className="flex h-14 items-center gap-2 border-b border-slate-100 px-4 dark:border-slate-700">
+        <div className={`flex h-14 items-center gap-2 border-b border-slate-100 px-4 dark:border-slate-700 ${sidebarSoIcones ? 'md:justify-center md:px-2' : ''}`}>
           <img
             src="/logoInovateca.png"
             alt={NOME_SISTEMA}
-            className="h-7 max-w-[10rem] object-contain object-left"
+            className={`h-7 max-w-[10rem] object-contain object-left ${sidebarSoIcones ? 'md:hidden' : ''}`}
             decoding="async"
           />
           <button
@@ -143,14 +161,44 @@ export function LayoutUsuario() {
           >
             ✕
           </button>
+          <button
+            type="button"
+            className={`hidden shrink-0 rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 md:flex ${
+              !sidebarSoIcones ? 'md:ml-auto' : ''
+            }`}
+            aria-expanded={!sidebarSoIcones}
+            aria-label={sidebarSoIcones ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+            title={sidebarSoIcones ? 'Expandir menu' : 'Recolher menu'}
+            onClick={() => setSidebarSoIcones((v) => !v)}
+          >
+            {sidebarSoIcones ? (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            )}
+          </button>
         </div>
-        <nav className="p-3" onClick={() => setMenuAberto(false)}>
+        <nav className={`p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`} onClick={() => setMenuAberto(false)}>
           {links.map((l) => {
             const { Icon } = l
             return (
               <NavLink key={l.to} to={l.to} className={linkClass} title={l.label}>
                 <Icon />
-                {l.label}
+                <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{l.label}</span>
               </NavLink>
             )
           })}
