@@ -4,6 +4,7 @@
  */
 
 const CHAVE = 'biblioteca_corp_estado_v1'
+const SEED_VERSAO = 2
 
 /** Gera identificador único simples para registros novos. */
 export function novoId() {
@@ -32,6 +33,7 @@ function estadoSemeado() {
   const u11 = novoId()
 
   return {
+    _meta: { seedVersao: SEED_VERSAO },
     usuarios: [
       {
         id: adminId,
@@ -342,7 +344,14 @@ export function carregarEstado() {
       localStorage.setItem(CHAVE, JSON.stringify(inicial))
       return inicial
     }
-    return JSON.parse(bruto)
+    const atual = JSON.parse(bruto)
+    const seedVersaoAtual = atual?._meta?.seedVersao || 0
+    if (seedVersaoAtual < SEED_VERSAO) {
+      const inicial = estadoSemeado()
+      localStorage.setItem(CHAVE, JSON.stringify(inicial))
+      return inicial
+    }
+    return atual
   } catch {
     const inicial = estadoSemeado()
     localStorage.setItem(CHAVE, JSON.stringify(inicial))

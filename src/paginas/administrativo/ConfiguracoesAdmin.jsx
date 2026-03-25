@@ -13,7 +13,6 @@ export default function ConfiguracoesAdmin() {
     atualizarConfiguracao,
     marcarNotificacaoLida,
     marcarTodasNotificacoesLidas,
-    reiniciarDadosDemo,
   } = useBiblioteca()
   const { toast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -128,24 +127,6 @@ export default function ConfiguracoesAdmin() {
             Salvar parâmetros
           </button>
 
-          <div className="pt-2">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Demonstração: reinicia os dados locais (usuários, livros, reservas e empréstimos) para o seed.
-            </p>
-            <button
-              type="button"
-              className="mt-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-              onClick={() => {
-                if (!confirm('Reiniciar demonstração? Isso apaga os dados locais atuais.')) return
-                const inicial = reiniciarDadosDemo()
-                setPrazoEmprestimoDias(inicial.configuracao.prazoEmprestimoDias)
-                setMaxReservasPorUsuario(inicial.configuracao.maxReservasPorUsuario)
-                toast.success('Demonstração reiniciada.')
-              }}
-            >
-              Reiniciar demonstração
-            </button>
-          </div>
         </form>
       )}
 
