@@ -164,8 +164,13 @@ const links = [
   { to: '/admin/reservas', label: 'Reservas', Icon: IconeReservas },
   { to: '/admin/emprestimos', label: 'Empréstimos', Icon: IconeEmprestimos },
   { to: '/admin/devolucao', label: 'Devolução', Icon: IconeDevolucao },
-  { to: '/admin/configuracoes', label: 'Configurações', Icon: IconeConfiguracoes },
 ]
+
+const linkConfiguracoes = {
+  to: '/admin/configuracoes',
+  label: 'Configurações',
+  Icon: IconeConfiguracoes,
+}
 
 const CHAVE_SIDEBAR_ICONES = 'inovateca_admin_sidebar_icones'
 
@@ -251,6 +256,7 @@ export function LayoutAdministrativo() {
           menuAberto ? 'translate-x-0' : '-translate-x-full'
         } ${sidebarSoIcones ? 'md:w-[4.5rem]' : 'md:w-64'}`}
       >
+        <div className="flex h-full flex-col">
         <div
           className={`flex h-14 min-w-0 w-full items-center justify-between gap-2 px-4 md:h-16 ${
             sidebarSoIcones ? 'md:justify-center md:px-2' : ''
@@ -303,7 +309,7 @@ export function LayoutAdministrativo() {
           </button>
         </div>
         <nav
-          className={`flex flex-col gap-0.5 overflow-y-auto p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`}
+          className={`flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`}
           onClick={() => setMenuAberto(false)}
         >
           {links.map((l) => {
@@ -322,6 +328,23 @@ export function LayoutAdministrativo() {
             )
           })}
         </nav>
+
+        <div
+          className={`border-t border-slate-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 ${
+            sidebarSoIcones ? 'md:px-2 md:py-2' : ''
+          }`}
+        >
+          <NavLink
+            to={linkConfiguracoes.to}
+            className={classeLinkNav(sidebarSoIcones)}
+            title={linkConfiguracoes.label}
+            onClick={() => setMenuAberto(false)}
+          >
+            <linkConfiguracoes.Icon />
+            <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{linkConfiguracoes.label}</span>
+          </NavLink>
+        </div>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
