@@ -163,6 +163,7 @@ function estadoSemeado() {
       },
     ],
     reservas: [],
+    avaliacoes: [],
     emprestimos: [
       // Devolvidos (para o ranking aparecer com exemplos)
       {
@@ -350,6 +351,11 @@ export function carregarEstado() {
       const inicial = estadoSemeado()
       localStorage.setItem(CHAVE, JSON.stringify(inicial))
       return inicial
+    }
+    if (!Array.isArray(atual.avaliacoes)) {
+      const corrigido = { ...atual, avaliacoes: [] }
+      localStorage.setItem(CHAVE, JSON.stringify(corrigido))
+      return corrigido
     }
     return atual
   } catch {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { AVATAR_PADRAO_URL } from '../../utilitarios/avatarsPredefinidos.js'
@@ -69,20 +69,27 @@ const links = [
   { to: '/app/catalogo', label: 'Catálogo', Icon: IconeCatalogo },
   { to: '/app/minhas-reservas', label: 'Minhas reservas', Icon: IconeReservas },
   { to: '/app/meus-emprestimos', label: 'Meus empréstimos', Icon: IconeEmprestimos },
-  { to: '/app/notificacoes', label: 'Notificações', Icon: IconeNotificacoes },
 ]
+
+const linkNotificacoes = {
+  to: '/app/notificacoes',
+  label: 'Notificações',
+  Icon: IconeNotificacoes,
+}
 
 const linkClass = ({ isActive }) =>
   `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
     isActive
       ? 'bg-[#F2F9FB] text-[#0084E1] dark:bg-slate-800 dark:text-sky-400'
-      : 'text-[#5A5D5C] hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+      : 'text-[#5A5D5C] hover:bg-[#F2F9FB] hover:text-[#0084E1] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400'
   }`
 
 /** Área do leitor: autoatendimento e acompanhamento pessoal (responsivo). */
 export function LayoutUsuario() {
   const { usuarioAtual, logout } = useAutenticacao()
   const { toast } = useToast()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [menuAberto, setMenuAberto] = useState(false)
   /** No desktop (md+): menu só com ícones; no mobile o drawer permanece largura completa. */
   const [sidebarSoIcones, setSidebarSoIcones] = useState(() => {
@@ -104,6 +111,16 @@ export function LayoutUsuario() {
   function encerrarSessao() {
     toast.info('Sessão encerrada.')
     logout()
+  }
+
+  const exibindoBuscaCatalogo = location.pathname.startsWith('/app/catalogo')
+  const valorBuscaCatalogo = searchParams.get('q') || ''
+
+  function atualizarBuscaCatalogo(valor) {
+    const next = new URLSearchParams(searchParams)
+    if (valor.trim()) next.set('q', valor)
+    else next.delete('q')
+    setSearchParams(next, { replace: true })
   }
 
   return (
@@ -147,67 +164,95 @@ export function LayoutUsuario() {
           menuAberto ? 'translate-x-0' : '-translate-x-full'
         } ${sidebarSoIcones ? 'md:w-[4.5rem]' : 'md:w-60'}`}
       >
-        <div className={`flex h-14 items-center gap-2 border-b border-slate-100 px-4 dark:border-slate-700 ${sidebarSoIcones ? 'md:justify-center md:px-2' : ''}`}>
-          <img
-            src="/logoInovateca.png"
-            alt={NOME_SISTEMA}
-            className={`h-7 max-w-[10rem] object-contain object-left ${sidebarSoIcones ? 'md:hidden' : ''}`}
-            decoding="async"
-          />
-          <button
-            type="button"
-            className="ml-auto md:hidden"
-            onClick={() => setMenuAberto(false)}
-          >
-            ✕
-          </button>
-          <button
-            type="button"
-            className={`hidden shrink-0 rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 md:flex ${
-              !sidebarSoIcones ? 'md:ml-auto' : ''
+        <div className="flex h-full flex-col">
+          <div className={`flex h-14 items-center gap-2 border-b border-slate-100 px-4 dark:border-slate-700 ${sidebarSoIcones ? 'md:justify-center md:px-2' : ''}`}>
+            <img
+              src="/logoInovateca.png"
+              alt={NOME_SISTEMA}
+              className={`h-7 max-w-[10rem] object-contain object-left ${sidebarSoIcones ? 'md:hidden' : ''}`}
+              decoding="async"
+            />
+            <button
+              type="button"
+              className="ml-auto md:hidden"
+              onClick={() => setMenuAberto(false)}
+            >
+              ✕
+            </button>
+            <button
+              type="button"
+              className={`hidden shrink-0 rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 md:flex ${
+                !sidebarSoIcones ? 'md:ml-auto' : ''
+              }`}
+              aria-expanded={!sidebarSoIcones}
+              aria-label={sidebarSoIcones ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+              title={sidebarSoIcones ? 'Expandir menu' : 'Recolher menu'}
+              onClick={() => setSidebarSoIcones((v) => !v)}
+            >
+              {sidebarSoIcones ? (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+          <nav className={`flex flex-1 flex-col p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`} onClick={() => setMenuAberto(false)}>
+            {links.map((l) => {
+              const { Icon } = l
+              return (
+                <NavLink key={l.to} to={l.to} className={linkClass} title={l.label}>
+                  <Icon />
+                  <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{l.label}</span>
+                </NavLink>
+              )
+            })}
+          </nav>
+          <div
+            className={`border-t border-slate-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 ${
+              sidebarSoIcones ? 'md:px-2 md:py-2' : ''
             }`}
-            aria-expanded={!sidebarSoIcones}
-            aria-label={sidebarSoIcones ? 'Expandir menu lateral' : 'Recolher menu lateral'}
-            title={sidebarSoIcones ? 'Expandir menu' : 'Recolher menu'}
-            onClick={() => setSidebarSoIcones((v) => !v)}
           >
-            {sidebarSoIcones ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            )}
-          </button>
+            <NavLink
+              to={linkNotificacoes.to}
+              className={linkClass}
+              title={linkNotificacoes.label}
+              onClick={() => setMenuAberto(false)}
+            >
+              <linkNotificacoes.Icon />
+              <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{linkNotificacoes.label}</span>
+            </NavLink>
+          </div>
         </div>
-        <nav className={`p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`} onClick={() => setMenuAberto(false)}>
-          {links.map((l) => {
-            const { Icon } = l
-            return (
-              <NavLink key={l.to} to={l.to} className={linkClass} title={l.label}>
-                <Icon />
-                <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{l.label}</span>
-              </NavLink>
-            )
-          })}
-        </nav>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden items-center justify-end border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-900 md:flex">
-          <div className="flex items-center gap-3">
+        <header className="hidden items-center justify-between bg-white px-6 py-3 dark:bg-slate-900 md:flex">
+          <div className="min-w-0 flex-1">
+            {exibindoBuscaCatalogo && (
+              <input
+                type="search"
+                placeholder="Buscar…"
+                value={valorBuscaCatalogo}
+                onChange={(e) => atualizarBuscaCatalogo(e.target.value)}
+                className="h-[41px] w-full max-w-md rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-500 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+              />
+            )}
+          </div>
+          <div className="ml-4 flex items-center gap-3">
             <SeletorTema />
             <NotificacoesSino />
             <MenuContaUsuario

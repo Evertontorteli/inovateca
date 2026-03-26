@@ -85,8 +85,10 @@ export function NotificacoesSino() {
                 <li key={n.id}>
                   <button
                     type="button"
-                    className={`w-full border-b border-slate-50 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
-                      n.lida ? 'opacity-70' : 'bg-brand/10 dark:bg-brand/20'
+                    className={`w-full border-b border-slate-50 px-3 py-2.5 text-left text-sm last:border-0 transition-colors hover:bg-brand/10 dark:border-slate-800 dark:hover:bg-brand/20 ${
+                      n.lida
+                        ? 'bg-white dark:bg-slate-900'
+                        : 'bg-slate-200/80 dark:bg-slate-800/70'
                     }`}
                     onClick={() => {
                       if (!n.lida) marcarNotificacaoLida(n.id)

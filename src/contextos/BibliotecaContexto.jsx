@@ -36,12 +36,21 @@ export function BibliotecaProvedor({ children }) {
 
   const livrosComDetalhes = useMemo(() => {
     const { livros, categorias, autores } = estado
+    const avaliacoes = estado.avaliacoes || []
     return livros.map((l) => ({
       ...l,
       categoria: categorias.find((c) => c.id === l.categoriaId),
       autores: l.autorIds
         .map((id) => autores.find((a) => a.id === id))
         .filter(Boolean),
+      avaliacoes: avaliacoes.filter((a) => a.livroId === l.id),
+      totalAvaliacoes: avaliacoes.filter((a) => a.livroId === l.id).length,
+      mediaAvaliacao: (() => {
+        const itens = avaliacoes.filter((a) => a.livroId === l.id)
+        if (itens.length === 0) return 0
+        const soma = itens.reduce((acc, a) => acc + a.nota, 0)
+        return soma / itens.length
+      })(),
     }))
   }, [estado])
 
@@ -144,6 +153,7 @@ export function BibliotecaProvedor({ children }) {
       livros: prev.livros.filter((l) => l.id !== id),
       reservas: prev.reservas.filter((r) => r.livroId !== id),
       emprestimos: prev.emprestimos.filter((e) => e.livroId !== id),
+      avaliacoes: (prev.avaliacoes || []).filter((a) => a.livroId !== id),
     }))
   }, [])
 
@@ -183,7 +193,72 @@ export function BibliotecaProvedor({ children }) {
     comPersistencia(setEstado, (prev) => ({
       ...prev,
       usuarios: prev.usuarios.filter((u) => u.id !== id),
+      avaliacoes: (prev.avaliacoes || []).filter((a) => a.usuarioId !== id),
     }))
+  }, [])
+
+  const avaliarLivro = useCallback((usuarioId, livroId, nota) => {
+    let erro = null
+    comPersistencia(setEstado, (prev) => {
+      const livroExiste = prev.livros.some((l) => l.id === livroId)
+      if (!livroExiste) {
+        erro = 'Livro não encontrado.'
+        return prev
+      }
+      const usuarioExiste = prev.usuarios.some((u) => u.id === usuarioId)
+      if (!usuarioExiste) {
+        erro = 'Usuário não encontrado.'
+        return prev
+      }
+      const notaInt = Number(nota)
+      if (!Number.isInteger(notaInt) || notaInt < 1 || notaInt > 5) {
+        erro = 'A nota deve ser de 1 a 5.'
+        return prev
+      }
+
+      const lista = prev.avaliacoes || []
+      const idx = lista.findIndex(
+        (a) => a.usuarioId === usuarioId && a.livroId === livroId,
+      )
+      if (idx >= 0) {
+        const atualizadas = [...lista]
+        atualizadas[idx] = {
+          ...atualizadas[idx],
+          nota: notaInt,
+          atualizadaEm: new Date().toISOString(),
+        }
+        return { ...prev, avaliacoes: atualizadas }
+      }
+      const nova = {
+        id: novoId(),
+        usuarioId,
+        livroId,
+        nota: notaInt,
+        criadaEm: new Date().toISOString(),
+      }
+      return { ...prev, avaliacoes: [nova, ...lista] }
+    })
+    return { ok: !erro, erro }
+  }, [])
+
+  const removerAvaliacaoLivro = useCallback((usuarioId, livroId) => {
+    let erro = null
+    comPersistencia(setEstado, (prev) => {
+      const existe = (prev.avaliacoes || []).some(
+        (a) => a.usuarioId === usuarioId && a.livroId === livroId,
+      )
+      if (!existe) {
+        erro = 'Você ainda não avaliou este livro.'
+        return prev
+      }
+      return {
+        ...prev,
+        avaliacoes: (prev.avaliacoes || []).filter(
+          (a) => !(a.usuarioId === usuarioId && a.livroId === livroId),
+        ),
+      }
+    })
+    return { ok: !erro, erro }
   }, [])
 
   const adicionarNotificacao = useCallback((usuarioId, { titulo, mensagem, tipo }) => {
@@ -468,6 +543,8 @@ export function BibliotecaProvedor({ children }) {
       excluirLivro,
       salvarUsuario,
       excluirUsuario,
+      avaliarLivro,
+      removerAvaliacaoLivro,
       criarReserva,
       cancelarReserva,
       atenderReservaComEmprestimo,
@@ -490,6 +567,8 @@ export function BibliotecaProvedor({ children }) {
       excluirLivro,
       salvarUsuario,
       excluirUsuario,
+      avaliarLivro,
+      removerAvaliacaoLivro,
       criarReserva,
       cancelarReserva,
       atenderReservaComEmprestimo,

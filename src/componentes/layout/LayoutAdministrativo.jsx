@@ -181,7 +181,7 @@ function classeLinkNav(soIcones) {
     } ${
       isActive
         ? 'bg-[#F2F9FB] text-[#0084E1] dark:bg-slate-800 dark:text-sky-400'
-        : 'text-[#5A5D5C] hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+        : 'text-[#5A5D5C] hover:bg-[#F2F9FB] hover:text-[#0084E1] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-sky-400'
     }`
 }
 
