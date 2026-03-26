@@ -2,6 +2,46 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 
+function IconeLivrosSolid() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M4.5 4.75A2.25 2.25 0 016.75 2.5h7a2.25 2.25 0 012.25 2.25v16.75H6.75A2.25 2.25 0 014.5 19.25V4.75zM18 4.75v16.75h.75A2.25 2.25 0 0021 19.25V6.5a2.25 2.25 0 00-2.25-2.25H18z" />
+    </svg>
+  )
+}
+
+function IconeUsuariosSolid() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 12a4.25 4.25 0 100-8.5 4.25 4.25 0 000 8.5zM4.5 19.25a6.75 6.75 0 0113.5 0v.75H4.5v-.75zM18.75 10.5a3.25 3.25 0 100-6.5 3.25 3.25 0 000 6.5zM18.5 14.5a5.5 5.5 0 015 5.5h-3a8.2 8.2 0 00-1.7-5.04c-.1-.13-.2-.3-.3-.46z" />
+    </svg>
+  )
+}
+
+function IconeReservasSolid() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M6 3.5A2.5 2.5 0 003.5 6v14.5l8.5-3.75 8.5 3.75V6A2.5 2.5 0 0018 3.5H6z" />
+    </svg>
+  )
+}
+
+function IconeEmprestimosSolid() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M13.75 3.5a1 1 0 00-1 1v2.25h-6a1 1 0 100 2h6v2.25a1 1 0 001.7.71l3.5-3.5a1 1 0 000-1.42l-3.5-3.5a1 1 0 00-.7-.29zM10.25 20.5a1 1 0 001-1v-2.25h6a1 1 0 100-2h-6V13a1 1 0 00-1.7-.71l-3.5 3.5a1 1 0 000 1.42l3.5 3.5a1 1 0 00.7.29z" />
+    </svg>
+  )
+}
+
+function IconeAtrasosSolid() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path fillRule="evenodd" d="M12 2.75a9.25 9.25 0 100 18.5 9.25 9.25 0 000-18.5zM12 7a1 1 0 011 1v3.5a1 1 0 01-.3.71l-2.25 2.25a1 1 0 11-1.4-1.42L11 11.34V8a1 1 0 011-1zm.75 8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
 /** Resumo operacional: contagens rápidas para o administrador. */
 export default function PainelAdmin() {
   const { estado } = useBiblioteca()
@@ -62,15 +102,51 @@ export default function PainelAdmin() {
   }, [estado.emprestimos, estado.usuarios])
 
   const cards = [
-    { label: 'Títulos no acervo', valor: stats.livros, to: '/admin/livros' },
-    { label: 'Usuários cadastrados', valor: stats.usuarios, to: '/admin/usuarios' },
-    { label: 'Reservas ativas', valor: stats.reservasAtivas, to: '/admin/reservas' },
-    { label: 'Empréstimos em curso', valor: stats.emprestimosAtivos, to: '/admin/emprestimos' },
+    {
+      label: 'Títulos no acervo',
+      valor: stats.livros,
+      to: '/admin/livros',
+      Icon: IconeLivrosSolid,
+      cor: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+      numero: 'text-sky-700 dark:text-sky-300',
+      bordaDireita: 'border-r-2 border-r-sky-500 dark:border-r-sky-400',
+    },
+    {
+      label: 'Usuários cadastrados',
+      valor: stats.usuarios,
+      to: '/admin/usuarios',
+      Icon: IconeUsuariosSolid,
+      cor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+      numero: 'text-indigo-700 dark:text-indigo-300',
+      bordaDireita: 'border-r-2 border-r-indigo-500 dark:border-r-indigo-400',
+    },
+    {
+      label: 'Reservas ativas',
+      valor: stats.reservasAtivas,
+      to: '/admin/reservas',
+      Icon: IconeReservasSolid,
+      cor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+      numero: 'text-cyan-700 dark:text-cyan-300',
+      bordaDireita: 'border-r-2 border-r-cyan-500 dark:border-r-cyan-400',
+    },
+    {
+      label: 'Empréstimos em curso',
+      valor: stats.emprestimosAtivos,
+      to: '/admin/emprestimos',
+      Icon: IconeEmprestimosSolid,
+      cor: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+      numero: 'text-violet-700 dark:text-violet-300',
+      bordaDireita: 'border-r-2 border-r-violet-500 dark:border-r-violet-400',
+    },
     {
       label: 'Possíveis atrasos (hoje)',
       valor: stats.atrasos,
       to: '/admin/devolucao',
       destaque: stats.atrasos > 0,
+      Icon: IconeAtrasosSolid,
+      cor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+      numero: 'text-amber-700 dark:text-amber-300',
+      bordaDireita: 'border-r-2 border-r-amber-500 dark:border-r-amber-400',
     },
   ]
 
@@ -83,19 +159,26 @@ export default function PainelAdmin() {
           empréstimo, acompanhamento e devolução.
         </p>
 
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {cards.map((c) => (
             <li key={c.label}>
               <Link
                 to={c.to}
-                className={`block rounded-xl border p-5 shadow-sm transition hover:shadow-md ${
+                className={`block rounded-2xl border p-5 shadow-sm transition hover:shadow-md ${
                   c.destaque
                     ? 'border-amber-300 bg-amber-50/80'
                     : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
-                }`}
+                } ${c.bordaDireita}`}
               >
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{c.label}</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{c.valor}</p>
+                <div className="flex items-start justify-between">
+                  <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${c.cor}`}>
+                    <c.Icon />
+                  </span>
+                  <p className={`text-3xl font-semibold ${c.numero}`}>{c.valor}</p>
+                </div>
+                <p className="mt-5 text-center text-sm font-medium text-slate-600 dark:text-slate-400">
+                  {c.label}
+                </p>
               </Link>
             </li>
           ))}

@@ -401,14 +401,25 @@ export default function UsuariosAdmin() {
                 <td className="px-4 py-3">
                   <button
                     type="button"
-                    className="text-brand hover:underline"
+                    className="rounded-md p-1.5 text-brand hover:bg-brand/10"
+                    title="Editar usuário"
+                    aria-label="Editar usuário"
                     onClick={() => abrirEditar(u)}
                   >
-                    Editar
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.586a2 2 0 112.828 2.828L11.828 14.828a2 2 0 01-.878.505l-3 1a.5.5 0 01-.632-.632l1-3a2 2 0 01.505-.878l8.763-8.763z"
+                      />
+                    </svg>
                   </button>
                   <button
                     type="button"
-                    className="ml-3 text-rose-600 hover:underline dark:text-rose-400"
+                    className="ml-2 rounded-md p-1.5 text-rose-600 hover:bg-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/30"
+                    title="Excluir usuário"
+                    aria-label="Excluir usuário"
                     onClick={() => {
                       if (confirm(`Remover ${u.nome}?`)) {
                         excluirUsuario(u.id)
@@ -416,7 +427,14 @@ export default function UsuariosAdmin() {
                       }
                     }}
                   >
-                    Excluir
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 7h12m-1 0-.867 12.142A2 2 0 0114.138 21H9.862a2 2 0 01-1.995-1.858L7 7m3 0V5a1 1 0 011-1h2a1 1 0 011 1v2"
+                      />
+                    </svg>
                   </button>
                 </td>
               </tr>

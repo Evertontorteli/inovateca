@@ -134,35 +134,62 @@ export default function AutoresAdmin() {
         </div>
       )}
 
-      <ul className="mt-8 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        {estado.autores.map((a) => (
-          <li
-            key={a.id}
-            className="flex items-center justify-between px-4 py-3"
-          >
-            <span className="font-medium text-slate-900 dark:text-slate-100">{a.nome}</span>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="text-sm text-brand hover:underline"
-                onClick={() => abrirEditar(a)}
-              >
-                Editar
-              </button>
-              <button
-                type="button"
-                className="text-sm text-rose-600 hover:underline"
-                onClick={() => {
-                  excluirAutor(a.id)
-                  toast.success('Autor removido.')
-                }}
-              >
-                Excluir
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <table className="min-w-full text-left text-sm">
+          <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <tr>
+              <th className="px-4 py-3 font-medium">Autor</th>
+              <th className="px-4 py-3 font-medium text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {estado.autores.map((a) => (
+              <tr key={a.id} className="dark:text-slate-200">
+                <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                  {a.nome}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    className="rounded-md p-1.5 text-brand hover:bg-brand/10"
+                    title="Editar autor"
+                    aria-label="Editar autor"
+                    onClick={() => abrirEditar(a)}
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.586a2 2 0 112.828 2.828L11.828 14.828a2 2 0 01-.878.505l-3 1a.5.5 0 01-.632-.632l1-3a2 2 0 01.505-.878l8.763-8.763z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="ml-2 rounded-md p-1.5 text-rose-600 hover:bg-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/30"
+                    title="Excluir autor"
+                    aria-label="Excluir autor"
+                    onClick={() => {
+                      excluirAutor(a.id)
+                      toast.success('Autor removido.')
+                    }}
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 7h12m-1 0-.867 12.142A2 2 0 0114.138 21H9.862a2 2 0 01-1.995-1.858L7 7m3 0V5a1 1 0 011-1h2a1 1 0 011 1v2"
+                      />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
