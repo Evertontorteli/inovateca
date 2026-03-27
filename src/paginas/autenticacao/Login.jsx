@@ -41,12 +41,6 @@ export default function Login() {
       <p className="mt-1 text-sm text-slate-600">
         Use seu e-mail corporativo e senha.
       </p>
-      <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
-        <strong>MVP:</strong> tente <code className="rounded bg-white px-1">admin@empresa.com</code>{' '}
-        / <code className="rounded bg-white px-1">admin</code> ou{' '}
-        <code className="rounded bg-white px-1">usuario@empresa.com</code> /{' '}
-        <code className="rounded bg-white px-1">123456</code>
-      </p>
 
       <form className="mt-6 space-y-4" onSubmit={aoEnviar}>
         <div>

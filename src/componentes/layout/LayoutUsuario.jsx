@@ -113,7 +113,10 @@ export function LayoutUsuario() {
     logout()
   }
 
-  const exibindoBuscaCatalogo = location.pathname.startsWith('/app/catalogo')
+  const rotasComBusca = ['/app/catalogo', '/app/minhas-reservas', '/app/meus-emprestimos']
+  const exibindoBusca = rotasComBusca.some((rota) =>
+    location.pathname.startsWith(rota),
+  )
   const valorBuscaCatalogo = searchParams.get('q') || ''
 
   function atualizarBuscaCatalogo(valor) {
@@ -167,7 +170,7 @@ export function LayoutUsuario() {
         <div className="flex h-full flex-col">
           <div className={`flex h-14 items-center gap-2 border-b border-slate-100 px-4 dark:border-slate-700 ${sidebarSoIcones ? 'md:justify-center md:px-2' : ''}`}>
             <img
-              src="/logoInovateca.png"
+              src="/LogoInovaca.svg"
               alt={NOME_SISTEMA}
               className={`h-7 max-w-[10rem] object-contain object-left ${sidebarSoIcones ? 'md:hidden' : ''}`}
               decoding="async"
@@ -242,7 +245,7 @@ export function LayoutUsuario() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="hidden items-center justify-between bg-white px-6 py-3 dark:bg-slate-900 md:flex">
           <div className="min-w-0 flex-1">
-            {exibindoBuscaCatalogo && (
+            {exibindoBusca && (
               <input
                 type="search"
                 placeholder="Buscar…"

@@ -263,7 +263,7 @@ export function LayoutAdministrativo() {
           }`}
         >
           <img
-            src="/logoInovateca.png"
+            src="/LogoInovaca.svg"
             alt={NOME_SISTEMA}
             className={`h-7 min-w-0 max-w-[70%] object-contain object-left md:h-9 md:max-w-[11rem] ${
               sidebarSoIcones ? 'md:hidden' : ''

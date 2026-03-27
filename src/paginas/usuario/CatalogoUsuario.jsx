@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
+
+const ITENS_POR_PAGINA = 20
 
 function IconeEstrela({ ativa }) {
   return (
@@ -30,6 +32,7 @@ export default function CatalogoUsuario() {
   const [filtroAutor, setFiltroAutor] = useState('todos')
   const [somenteDisponiveis, setSomenteDisponiveis] = useState(false)
   const [modalFiltro, setModalFiltro] = useState(null)
+  const [paginaAtual, setPaginaAtual] = useState(1)
 
   const categoriasFiltro = Array.from(
     new Set(livrosComDetalhes.map((l) => l.categoria?.nome).filter(Boolean)),
@@ -61,6 +64,14 @@ export default function CatalogoUsuario() {
       passaDisponiveis
     )
   })
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
+  const pagina = Math.min(paginaAtual, totalPaginas)
+  const inicio = (pagina - 1) * ITENS_POR_PAGINA
+  const livrosPaginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca, filtroLetra, filtroCategoria, filtroAutor, somenteDisponiveis])
 
   function reservar(livroId) {
     const r = criarReserva(usuarioAtual.id, livroId)
@@ -227,6 +238,7 @@ export default function CatalogoUsuario() {
                   type="button"
                   onClick={() => {
                     op.onClick()
+                    setPaginaAtual(1)
                     fecharModalFiltro()
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
@@ -244,7 +256,7 @@ export default function CatalogoUsuario() {
       )}
 
       <ul className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtrados.map((l) => (
+        {livrosPaginados.map((l) => (
           <li
             key={l.id}
             className="mx-auto flex w-full max-w-[15.5rem] flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900"
@@ -320,6 +332,31 @@ export default function CatalogoUsuario() {
           </li>
         ))}
       </ul>
+      {filtrados.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
