@@ -183,6 +183,8 @@ export function BibliotecaProvedor({ children }) {
         senha: dados.senha,
         perfil: dados.perfil || 'usuario',
         avatarUrl: dados.avatarUrl || AVATAR_PADRAO_URL,
+        whatsapp:
+          typeof dados.whatsapp === 'string' ? dados.whatsapp.trim() : '',
       }
       return { ...prev, usuarios: [...prev.usuarios, novo] }
     })

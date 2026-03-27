@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
+import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { AVATAR_PADRAO_URL } from '../../utilitarios/avatarsPredefinidos.js'
 import { NOME_SISTEMA } from '../../utilitarios/marca.js'
@@ -87,6 +88,7 @@ const linkClass = ({ isActive }) =>
 /** Área do leitor: autoatendimento e acompanhamento pessoal (responsivo). */
 export function LayoutUsuario() {
   const { usuarioAtual, logout } = useAutenticacao()
+  const { salvarUsuario } = useBiblioteca()
   const { toast } = useToast()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -113,6 +115,31 @@ export function LayoutUsuario() {
     logout()
   }
 
+  function salvarMeuPerfil({ nome, whatsapp, avatarUrl, senhaNova }) {
+    if (!usuarioAtual?.id) return
+    const alterouSenha = Boolean(senhaNova && senhaNova.length >= 4)
+    salvarUsuario({
+      id: usuarioAtual.id,
+      nome,
+      email: usuarioAtual.email,
+      perfil: usuarioAtual.perfil,
+      avatarUrl: avatarUrl ?? usuarioAtual.avatarUrl,
+      whatsapp,
+      ...(alterouSenha ? { senha: senhaNova } : {}),
+    })
+    if (alterouSenha) {
+      toast.info(
+        'Sua senha foi alterada. Você será desconectado em 8 segundos. Faça login novamente com a nova senha.',
+        8000,
+      )
+      window.setTimeout(() => {
+        logout()
+      }, 8000)
+      return
+    }
+    toast.success('Perfil atualizado.')
+  }
+
   const rotasComBusca = ['/app/catalogo', '/app/minhas-reservas', '/app/meus-emprestimos']
   const exibindoBusca = rotasComBusca.some((rota) =>
     location.pathname.startsWith(rota),
@@ -136,8 +163,11 @@ export function LayoutUsuario() {
           <MenuContaUsuario
             nome={usuarioAtual?.nome}
             email={usuarioAtual?.email}
+            perfil={usuarioAtual?.perfil}
+            whatsapp={usuarioAtual?.whatsapp}
             avatarUrl={usuarioAtual?.avatarUrl || AVATAR_PADRAO_URL}
             mostrarNome={false}
+            aoSalvarPerfil={salvarMeuPerfil}
             aoSair={() => {
               encerrarSessao()
               setMenuAberto(false)
@@ -261,7 +291,10 @@ export function LayoutUsuario() {
             <MenuContaUsuario
               nome={usuarioAtual?.nome}
               email={usuarioAtual?.email}
+              perfil={usuarioAtual?.perfil}
+              whatsapp={usuarioAtual?.whatsapp}
               avatarUrl={usuarioAtual?.avatarUrl || AVATAR_PADRAO_URL}
+              aoSalvarPerfil={salvarMeuPerfil}
               aoSair={encerrarSessao}
             />
           </div>

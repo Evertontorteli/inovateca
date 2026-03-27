@@ -11,6 +11,7 @@ const formVazio = () => ({
   nome: '',
   email: '',
   senha: '',
+  whatsapp: '',
   perfil: 'usuario',
   avatarUrl: AVATAR_PADRAO_URL,
 })
@@ -30,7 +31,10 @@ export default function UsuariosAdmin() {
   const usuariosFiltrados = useMemo(() => {
     if (!busca) return estado.usuarios
     return estado.usuarios.filter((u) =>
-      [u.nome, u.email, u.perfil].join(' ').toLowerCase().includes(busca),
+      [u.nome, u.email, u.perfil, u.whatsapp || '']
+        .join(' ')
+        .toLowerCase()
+        .includes(busca),
     )
   }, [estado.usuarios, busca])
   const [form, setForm] = useState(formVazio)
@@ -67,6 +71,7 @@ export default function UsuariosAdmin() {
       nome: u.nome,
       email: u.email,
       senha: '',
+      whatsapp: u.whatsapp || '',
       perfil: u.perfil,
       avatarUrl: u.avatarUrl || AVATAR_PADRAO_URL,
     })
@@ -115,6 +120,7 @@ export default function UsuariosAdmin() {
       senha: form.senha || undefined,
       perfil: form.perfil,
       avatarUrl: form.avatarUrl || AVATAR_PADRAO_URL,
+      whatsapp: form.whatsapp.trim(),
     })
     toast.success(editandoId ? 'Usuário atualizado.' : 'Usuário cadastrado.')
     fecharModal()
@@ -336,6 +342,23 @@ export default function UsuariosAdmin() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="Ex.: +55 11 99999-9999"
+                    className="campo-formulario mt-1.5"
+                    value={form.whatsapp}
+                    onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Opcional. DDD e número com código do país, se quiser.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                     Senha {editandoId && '(deixe em branco para manter)'}
                   </label>
                   <input
@@ -387,6 +410,7 @@ export default function UsuariosAdmin() {
               <th className="px-4 py-3 font-medium">Avatar</th>
               <th className="px-4 py-3 font-medium">Nome</th>
               <th className="px-4 py-3 font-medium">E-mail</th>
+              <th className="px-4 py-3 font-medium">WhatsApp</th>
               <th className="px-4 py-3 font-medium">Perfil</th>
               <th className="px-4 py-3 font-medium">Ações</th>
             </tr>
@@ -394,7 +418,7 @@ export default function UsuariosAdmin() {
           <tbody>
             {usuariosFiltrados.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                   {estado.usuarios.length === 0
                     ? 'Nenhum usuário cadastrado.'
                     : 'Nenhum usuário encontrado para a busca.'}
@@ -415,6 +439,9 @@ export default function UsuariosAdmin() {
                 </td>
                 <td className="px-4 py-3">{u.nome}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{u.email}</td>
+                <td className="max-w-[10rem] truncate px-4 py-3 text-slate-600 dark:text-slate-400">
+                  {u.whatsapp?.trim() ? u.whatsapp : '—'}
+                </td>
                 <td className="px-4 py-3 capitalize">{u.perfil}</td>
                 <td className="px-4 py-3">
                   <button

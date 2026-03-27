@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
+import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { AVATAR_PADRAO_URL } from '../../utilitarios/avatarsPredefinidos.js'
 import { NOME_SISTEMA } from '../../utilitarios/marca.js'
@@ -198,6 +199,7 @@ function classeLinkNav(soIcones) {
 /** Shell responsivo da área administrativa: menu lateral no desktop e gaveta no mobile. */
 export function LayoutAdministrativo() {
   const { usuarioAtual, logout } = useAutenticacao()
+  const { salvarUsuario } = useBiblioteca()
   const { toast } = useToast()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -218,6 +220,19 @@ export function LayoutAdministrativo() {
   function encerrarSessao() {
     toast.info('Sessão encerrada.')
     logout()
+  }
+
+  function salvarMeuPerfil({ nome, whatsapp }) {
+    if (!usuarioAtual?.id) return
+    salvarUsuario({
+      id: usuarioAtual.id,
+      nome,
+      email: usuarioAtual.email,
+      perfil: usuarioAtual.perfil,
+      avatarUrl: usuarioAtual.avatarUrl,
+      whatsapp,
+    })
+    toast.success('Perfil atualizado.')
   }
   /** No desktop (md+): menu só com ícones; no mobile o drawer permanece largura completa. */
   const [sidebarSoIcones, setSidebarSoIcones] = useState(() => {
@@ -248,8 +263,11 @@ export function LayoutAdministrativo() {
           <MenuContaUsuario
             nome={usuarioAtual?.nome}
             email={usuarioAtual?.email}
+            perfil={usuarioAtual?.perfil}
+            whatsapp={usuarioAtual?.whatsapp}
             avatarUrl={usuarioAtual?.avatarUrl || AVATAR_PADRAO_URL}
             mostrarNome={false}
+            aoSalvarPerfil={salvarMeuPerfil}
             aoSair={() => {
               encerrarSessao()
               setMenuAberto(false)
@@ -402,7 +420,10 @@ export function LayoutAdministrativo() {
             <MenuContaUsuario
               nome={usuarioAtual?.nome}
               email={usuarioAtual?.email}
+              perfil={usuarioAtual?.perfil}
+              whatsapp={usuarioAtual?.whatsapp}
               avatarUrl={usuarioAtual?.avatarUrl || AVATAR_PADRAO_URL}
+              aoSalvarPerfil={salvarMeuPerfil}
               aoSair={encerrarSessao}
             />
           </div>

@@ -336,6 +336,20 @@ function estadoSemeado() {
   }
 }
 
+/** Garante string `whatsapp` em cada usuário (dados antigos no localStorage). */
+function normalizarWhatsappUsuarios(estado) {
+  if (!estado || !Array.isArray(estado.usuarios)) return estado
+  const precisa = estado.usuarios.some((u) => typeof u.whatsapp !== 'string')
+  if (!precisa) return estado
+  const usuarios = estado.usuarios.map((u) => ({
+    ...u,
+    whatsapp: typeof u.whatsapp === 'string' ? u.whatsapp : '',
+  }))
+  const next = { ...estado, usuarios }
+  localStorage.setItem(CHAVE, JSON.stringify(next))
+  return next
+}
+
 /** Lê o estado salvo ou cria o seed na primeira execução. */
 export function carregarEstado() {
   try {
@@ -343,25 +357,25 @@ export function carregarEstado() {
     if (!bruto) {
       const inicial = estadoSemeado()
       localStorage.setItem(CHAVE, JSON.stringify(inicial))
-      return inicial
+      return normalizarWhatsappUsuarios(inicial)
     }
     const atual = JSON.parse(bruto)
     const seedVersaoAtual = atual?._meta?.seedVersao || 0
     if (seedVersaoAtual < SEED_VERSAO) {
       const inicial = estadoSemeado()
       localStorage.setItem(CHAVE, JSON.stringify(inicial))
-      return inicial
+      return normalizarWhatsappUsuarios(inicial)
     }
     if (!Array.isArray(atual.avaliacoes)) {
       const corrigido = { ...atual, avaliacoes: [] }
       localStorage.setItem(CHAVE, JSON.stringify(corrigido))
-      return corrigido
+      return normalizarWhatsappUsuarios(corrigido)
     }
-    return atual
+    return normalizarWhatsappUsuarios(atual)
   } catch {
     const inicial = estadoSemeado()
     localStorage.setItem(CHAVE, JSON.stringify(inicial))
-    return inicial
+    return normalizarWhatsappUsuarios(inicial)
   }
 }
 
