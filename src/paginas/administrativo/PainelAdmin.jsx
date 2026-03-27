@@ -271,14 +271,17 @@ export default function PainelAdmin() {
             ))}
           </div>
         ) : (
-          <ol className="mt-4 space-y-3">
+          <ol className="mt-4">
             {rankingLeitores.length === 0 && (
               <li className="text-sm text-slate-500 dark:text-slate-400">
                 Nenhuma leitura concluída ainda.
               </li>
             )}
             {rankingLeitores.map((r, idx) => (
-              <li key={r.usuarioId} className="flex items-center gap-3">
+              <li
+                key={r.usuarioId}
+                className="flex items-center gap-3 border-b border-slate-200 py-5 first:pt-0 last:border-b-0 dark:border-slate-700"
+              >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   {idx + 1}
                 </span>
