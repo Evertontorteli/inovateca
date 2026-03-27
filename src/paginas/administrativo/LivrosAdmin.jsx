@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 
 /** Tamanho máximo do arquivo de capa antes de base64 (localStorage). */
 const LIMITE_CAPA_BYTES = 500 * 1024
+
+const ITENS_POR_PAGINA = 20
 
 /** Cadastro e edição do acervo (livros, vínculo com categoria e autores). */
 export default function LivrosAdmin() {
@@ -11,9 +14,13 @@ export default function LivrosAdmin() {
     livrosComDetalhes,
     estado,
     salvarLivro,
+    salvarCategoria,
+    salvarAutor,
     excluirLivro,
   } = useBiblioteca()
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
+  const busca = (searchParams.get('q') || '').toLowerCase().trim()
 
   const criarFormVazio = useCallback(
     () => ({
@@ -32,13 +39,48 @@ export default function LivrosAdmin() {
   const [form, setForm] = useState(() => criarFormVazio())
   const [editandoId, setEditandoId] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
+  const [modalNovaCategoriaAberto, setModalNovaCategoriaAberto] = useState(false)
+  const [modalNovoAutorAberto, setModalNovoAutorAberto] = useState(false)
+  const [nomeCategoriaRapida, setNomeCategoriaRapida] = useState('')
+  const [descricaoCategoriaRapida, setDescricaoCategoriaRapida] = useState('')
+  const [nomeAutorRapido, setNomeAutorRapido] = useState('')
+  const [categoriaRecemAdicionadaNome, setCategoriaRecemAdicionadaNome] = useState(null)
+  const [autorRecemAdicionadoNome, setAutorRecemAdicionadoNome] = useState(null)
+  const [paginaAtual, setPaginaAtual] = useState(1)
   const inputCapaRef = useRef(null)
+
+  const filtrados = useMemo(() => {
+    if (!busca) return livrosComDetalhes
+    return livrosComDetalhes.filter((l) => {
+      const autores = l.autores.map((a) => a.nome).join(' ')
+      const texto = [l.titulo, l.isbn, l.categoria?.nome, autores]
+        .join(' ')
+        .toLowerCase()
+      return texto.includes(busca)
+    })
+  }, [livrosComDetalhes, busca])
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA))
+  const pagina = Math.min(paginaAtual, totalPaginas)
+  const inicio = (pagina - 1) * ITENS_POR_PAGINA
+  const livrosPaginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
 
   const fecharModal = useCallback(() => {
     setModalAberto(false)
     setEditandoId(null)
     setForm(criarFormVazio())
   }, [criarFormVazio])
+
+  const fecharModalNovaCategoria = useCallback(() => {
+    setModalNovaCategoriaAberto(false)
+    setNomeCategoriaRapida('')
+    setDescricaoCategoriaRapida('')
+  }, [])
+
+  const fecharModalNovoAutor = useCallback(() => {
+    setModalNovoAutorAberto(false)
+    setNomeAutorRapido('')
+  }, [])
 
   function abrirNovo() {
     setEditandoId(null)
@@ -62,17 +104,63 @@ export default function LivrosAdmin() {
   }
 
   useEffect(() => {
-    if (!modalAberto) return undefined
+    setPaginaAtual((p) => Math.min(p, totalPaginas))
+  }, [totalPaginas])
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
+
+  useEffect(() => {
+    const algumAberto =
+      modalAberto || modalNovaCategoriaAberto || modalNovoAutorAberto
+    if (!algumAberto) return undefined
     document.body.style.overflow = 'hidden'
     function aoTecla(e) {
-      if (e.key === 'Escape') fecharModal()
+      if (e.key !== 'Escape') return
+      if (modalNovaCategoriaAberto) fecharModalNovaCategoria()
+      else if (modalNovoAutorAberto) fecharModalNovoAutor()
+      else fecharModal()
     }
     document.addEventListener('keydown', aoTecla)
     return () => {
       document.body.style.overflow = ''
       document.removeEventListener('keydown', aoTecla)
     }
-  }, [modalAberto, fecharModal])
+  }, [
+    modalAberto,
+    modalNovaCategoriaAberto,
+    modalNovoAutorAberto,
+    fecharModal,
+    fecharModalNovaCategoria,
+    fecharModalNovoAutor,
+  ])
+
+  useEffect(() => {
+    if (!categoriaRecemAdicionadaNome) return
+    const alvo = categoriaRecemAdicionadaNome.trim()
+    const cat = [...estado.categorias]
+      .reverse()
+      .find((c) => c.nome.trim() === alvo)
+    if (cat) {
+      setForm((f) => ({ ...f, categoriaId: cat.id }))
+      setCategoriaRecemAdicionadaNome(null)
+    }
+  }, [estado.categorias, categoriaRecemAdicionadaNome])
+
+  useEffect(() => {
+    if (!autorRecemAdicionadoNome) return
+    const alvo = autorRecemAdicionadoNome.trim()
+    const autor = [...estado.autores].reverse().find((a) => a.nome.trim() === alvo)
+    if (autor) {
+      setForm((f) =>
+        f.autorIds.includes(autor.id)
+          ? f
+          : { ...f, autorIds: [...f.autorIds, autor.id] },
+      )
+      setAutorRecemAdicionadoNome(null)
+    }
+  }, [estado.autores, autorRecemAdicionadoNome])
 
   function toggleAutor(id) {
     setForm((f) => {
@@ -117,6 +205,32 @@ export default function LivrosAdmin() {
     fecharModal()
   }
 
+  function aoSalvarCategoriaRapida(e) {
+    e.preventDefault()
+    const nome = nomeCategoriaRapida.trim()
+    if (!nome) {
+      toast.erro('Informe o nome da categoria.')
+      return
+    }
+    salvarCategoria({ nome, descricao: descricaoCategoriaRapida.trim() })
+    setCategoriaRecemAdicionadaNome(nome)
+    toast.success('Categoria adicionada.')
+    fecharModalNovaCategoria()
+  }
+
+  function aoSalvarAutorRapido(e) {
+    e.preventDefault()
+    const nome = nomeAutorRapido.trim()
+    if (!nome) {
+      toast.erro('Informe o nome do autor.')
+      return
+    }
+    salvarAutor({ nome })
+    setAutorRecemAdicionadoNome(nome)
+    toast.success('Autor adicionado.')
+    fecharModalNovoAutor()
+  }
+
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -126,14 +240,181 @@ export default function LivrosAdmin() {
             Gestão do acervo físico/digital da empresa.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={abrirNovo}
-          className="shrink-0 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover"
-        >
-          Novo livro
-        </button>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setModalNovaCategoriaAberto(true)}
+            className="botao-formulario-secundario py-2.5 text-center text-sm font-semibold"
+          >
+            Nova categoria
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalNovoAutorAberto(true)}
+            className="botao-formulario-secundario py-2.5 text-center text-sm font-semibold"
+          >
+            Novo autor
+          </button>
+          <button
+            type="button"
+            onClick={abrirNovo}
+            className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover"
+          >
+            Novo livro
+          </button>
+        </div>
       </div>
+
+      {modalNovaCategoriaAberto && (
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center p-4 sm:items-center"
+          role="presentation"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+            aria-label="Fechar"
+            onClick={fecharModalNovaCategoria}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-livros-nova-categoria-titulo"
+            className="relative z-10 flex max-h-[min(92vh,520px)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+              <h2
+                id="modal-livros-nova-categoria-titulo"
+                className="text-lg font-medium text-slate-900 dark:text-slate-100"
+              >
+                Nova categoria
+              </h2>
+              <button
+                type="button"
+                onClick={fecharModalNovaCategoria}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                aria-label="Fechar modal"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+              onSubmit={aoSalvarCategoriaRapida}
+            >
+              <div className="space-y-4 px-4 py-4 md:px-6">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome</label>
+                  <input
+                    required
+                    className="campo-formulario mt-1.5"
+                    value={nomeCategoriaRapida}
+                    onChange={(e) => setNomeCategoriaRapida(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descrição</label>
+                  <input
+                    className="campo-formulario mt-1.5"
+                    value={descricaoCategoriaRapida}
+                    onChange={(e) => setDescricaoCategoriaRapida(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-200 px-4 py-4 dark:border-slate-700 md:px-6">
+                <button
+                  type="button"
+                  className="botao-formulario-secundario"
+                  onClick={fecharModalNovaCategoria}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {modalNovoAutorAberto && (
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center p-4 sm:items-center"
+          role="presentation"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+            aria-label="Fechar"
+            onClick={fecharModalNovoAutor}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-livros-novo-autor-titulo"
+            className="relative z-10 flex max-h-[min(92vh,480px)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+              <h2
+                id="modal-livros-novo-autor-titulo"
+                className="text-lg font-medium text-slate-900 dark:text-slate-100"
+              >
+                Novo autor
+              </h2>
+              <button
+                type="button"
+                onClick={fecharModalNovoAutor}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                aria-label="Fechar modal"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form className="flex min-h-0 flex-1 flex-col overflow-y-auto" onSubmit={aoSalvarAutorRapido}>
+              <div className="space-y-4 px-4 py-4 md:px-6">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome</label>
+                  <input
+                    required
+                    className="campo-formulario mt-1.5"
+                    value={nomeAutorRapido}
+                    onChange={(e) => setNomeAutorRapido(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-200 px-4 py-4 dark:border-slate-700 md:px-6">
+                <button type="button" className="botao-formulario-secundario" onClick={fecharModalNovoAutor}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {modalAberto && (
         <div
@@ -362,7 +643,7 @@ export default function LivrosAdmin() {
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <tr>
-              <th className="w-16 px-4 py-3 font-medium">Capa</th>
+              <th className="w-[5.5rem] px-4 py-3 font-medium">Capa</th>
               <th className="px-4 py-3 font-medium">Título</th>
               <th className="px-4 py-3 font-medium">Categoria</th>
               <th className="hidden px-4 py-3 font-medium md:table-cell">Autores</th>
@@ -371,7 +652,16 @@ export default function LivrosAdmin() {
             </tr>
           </thead>
           <tbody>
-            {livrosComDetalhes.map((l) => (
+            {filtrados.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                  {livrosComDetalhes.length === 0
+                    ? 'Nenhum livro cadastrado.'
+                    : 'Nenhum livro encontrado para a busca.'}
+                </td>
+              </tr>
+            )}
+            {livrosPaginados.map((l) => (
               <tr
                 key={l.id}
                 className="border-b border-slate-100 dark:border-slate-800 dark:text-slate-200"
@@ -380,11 +670,13 @@ export default function LivrosAdmin() {
                   {l.capaUrl ? (
                     <img
                       src={l.capaUrl}
-                      alt=""
-                      className="h-14 w-10 rounded object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                      alt={`Capa: ${l.titulo}`}
+                      className="h-28 w-20 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-600"
                     />
                   ) : (
-                    <span className="text-xs text-slate-400">—</span>
+                    <div className="flex h-28 w-20 shrink-0 items-center justify-center rounded-md bg-slate-100 px-1 text-center text-[10px] text-slate-400 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-600">
+                      Sem capa
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{l.titulo}</td>
@@ -439,6 +731,32 @@ export default function LivrosAdmin() {
           </tbody>
         </table>
       </div>
+
+      {filtrados.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

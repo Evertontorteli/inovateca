@@ -1,14 +1,29 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
+
+const ITENS_POR_PAGINA = 20
 
 /** Cadastro de autores vinculável aos livros. */
 export default function AutoresAdmin() {
   const { estado, salvarAutor, excluirAutor } = useBiblioteca()
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
+  const busca = (searchParams.get('q') || '').toLowerCase().trim()
+  const autoresFiltrados = useMemo(() => {
+    if (!busca) return estado.autores
+    return estado.autores.filter((a) => a.nome.toLowerCase().includes(busca))
+  }, [estado.autores, busca])
   const [nome, setNome] = useState('')
   const [editandoId, setEditandoId] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
+  const [paginaAtual, setPaginaAtual] = useState(1)
+
+  const totalPaginas = Math.max(1, Math.ceil(autoresFiltrados.length / ITENS_POR_PAGINA))
+  const pagina = Math.min(paginaAtual, totalPaginas)
+  const inicioLista = (pagina - 1) * ITENS_POR_PAGINA
+  const autoresPaginados = autoresFiltrados.slice(inicioLista, inicioLista + ITENS_POR_PAGINA)
 
   function aoSalvar(e) {
     e.preventDefault()
@@ -47,6 +62,14 @@ export default function AutoresAdmin() {
       document.removeEventListener('keydown', aoTecla)
     }
   }, [modalAberto, fecharModal])
+
+  useEffect(() => {
+    setPaginaAtual((p) => Math.min(p, totalPaginas))
+  }, [totalPaginas])
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
 
   return (
     <div>
@@ -143,7 +166,16 @@ export default function AutoresAdmin() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {estado.autores.map((a) => (
+            {autoresFiltrados.length === 0 && (
+              <tr>
+                <td colSpan={2} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                  {estado.autores.length === 0
+                    ? 'Nenhum autor cadastrado.'
+                    : 'Nenhum autor encontrado para a busca.'}
+                </td>
+              </tr>
+            )}
+            {autoresPaginados.map((a) => (
               <tr key={a.id} className="dark:text-slate-200">
                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                   {a.nome}
@@ -190,6 +222,32 @@ export default function AutoresAdmin() {
           </tbody>
         </table>
       </div>
+
+      {autoresFiltrados.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

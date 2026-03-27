@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import {
@@ -24,6 +25,14 @@ function indicePorUrl(url) {
 export default function UsuariosAdmin() {
   const { estado, salvarUsuario, excluirUsuario } = useBiblioteca()
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
+  const busca = (searchParams.get('q') || '').toLowerCase().trim()
+  const usuariosFiltrados = useMemo(() => {
+    if (!busca) return estado.usuarios
+    return estado.usuarios.filter((u) =>
+      [u.nome, u.email, u.perfil].join(' ').toLowerCase().includes(busca),
+    )
+  }, [estado.usuarios, busca])
   const [form, setForm] = useState(formVazio)
   const [editandoId, setEditandoId] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
@@ -383,7 +392,16 @@ export default function UsuariosAdmin() {
             </tr>
           </thead>
           <tbody>
-            {estado.usuarios.map((u) => (
+            {usuariosFiltrados.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                  {estado.usuarios.length === 0
+                    ? 'Nenhum usuário cadastrado.'
+                    : 'Nenhum usuário encontrado para a busca.'}
+                </td>
+              </tr>
+            )}
+            {usuariosFiltrados.map((u) => (
               <tr
                 key={u.id}
                 className="border-b border-slate-100 dark:border-slate-800 dark:text-slate-200"

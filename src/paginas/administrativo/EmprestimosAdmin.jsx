@@ -1,20 +1,46 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { formatarData } from '../../utilitarios/datas.js'
+
+const ITENS_POR_PAGINA = 20
 
 /** Controle de empréstimos em curso e registro direto (sem reserva prévia). */
 export default function EmprestimosAdmin() {
   const { estado, emprestimosComStatus, criarEmprestimoDireto } = useBiblioteca()
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
+  const busca = (searchParams.get('q') || '').toLowerCase().trim()
   const [usuarioId, setUsuarioId] = useState(estado.usuarios[0]?.id || '')
   const [livroId, setLivroId] = useState(estado.livros[0]?.id || '')
   const [modalAberto, setModalAberto] = useState(false)
 
-  const ativos = useMemo(
-    () => emprestimosComStatus.filter((e) => e.status === 'ativo'),
-    [emprestimosComStatus],
-  )
+  const ativos = useMemo(() => {
+    const base = emprestimosComStatus.filter((e) => e.status === 'ativo')
+    if (!busca) return base
+    return base.filter((e) => {
+      const livro =
+        estado.livros.find((l) => l.id === e.livroId)?.titulo || '—'
+      const user =
+        estado.usuarios.find((u) => u.id === e.usuarioId)?.nome || '—'
+      return [livro, user].join(' ').toLowerCase().includes(busca)
+    })
+  }, [emprestimosComStatus, estado.livros, estado.usuarios, busca])
+
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const totalPaginas = Math.max(1, Math.ceil(ativos.length / ITENS_POR_PAGINA))
+  const pagina = Math.min(paginaAtual, totalPaginas)
+  const inicioLista = (pagina - 1) * ITENS_POR_PAGINA
+  const ativosPaginados = ativos.slice(inicioLista, inicioLista + ITENS_POR_PAGINA)
+
+  useEffect(() => {
+    setPaginaAtual((p) => Math.min(p, totalPaginas))
+  }, [totalPaginas])
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
 
   const fecharModal = useCallback(() => {
     setModalAberto(false)
@@ -41,6 +67,9 @@ export default function EmprestimosAdmin() {
 
   function nomeLivro(id) {
     return estado.livros.find((l) => l.id === id)?.titulo || '—'
+  }
+  function capaLivro(id) {
+    return estado.livros.find((l) => l.id === id)?.capaUrl || ''
   }
   function nomeUsuario(id) {
     return estado.usuarios.find((u) => u.id === id)?.nome || '—'
@@ -172,6 +201,7 @@ export default function EmprestimosAdmin() {
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <tr>
+              <th className="w-[5.5rem] px-4 py-3 font-medium">Capa</th>
               <th className="px-4 py-3 font-medium">Livro</th>
               <th className="px-4 py-3 font-medium">Usuário</th>
               <th className="px-4 py-3 font-medium">Retirada</th>
@@ -182,13 +212,28 @@ export default function EmprestimosAdmin() {
           <tbody>
             {ativos.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                  Nenhum empréstimo ativo.
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  {emprestimosComStatus.filter((e) => e.status === 'ativo').length === 0
+                    ? 'Nenhum empréstimo ativo.'
+                    : 'Nenhum empréstimo encontrado para a busca.'}
                 </td>
               </tr>
             )}
-            {ativos.map((e) => (
+            {ativosPaginados.map((e) => (
               <tr key={e.id} className="border-b border-slate-100">
+                <td className="px-4 py-3 align-middle">
+                  {capaLivro(e.livroId) ? (
+                    <img
+                      src={capaLivro(e.livroId)}
+                      alt={`Capa: ${nomeLivro(e.livroId)}`}
+                      className="h-20 w-14 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-14 items-center justify-center rounded-md bg-slate-100 px-1 text-center text-[10px] text-slate-400 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-600">
+                      Sem capa
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3 font-medium">{nomeLivro(e.livroId)}</td>
                 <td className="px-4 py-3">{nomeUsuario(e.usuarioId)}</td>
                 <td className="px-4 py-3 text-slate-600">{formatarData(e.dataRetirada)}</td>
@@ -209,6 +254,32 @@ export default function EmprestimosAdmin() {
           </tbody>
         </table>
       </div>
+
+      {ativos.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

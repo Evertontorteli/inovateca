@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { AVATAR_PADRAO_URL } from '../../utilitarios/avatarsPredefinidos.js'
@@ -174,6 +174,16 @@ const linkConfiguracoes = {
 
 const CHAVE_SIDEBAR_ICONES = 'inovateca_admin_sidebar_icones'
 
+const rotasComBusca = [
+  '/admin/livros',
+  '/admin/usuarios',
+  '/admin/categorias',
+  '/admin/autores',
+  '/admin/reservas',
+  '/admin/emprestimos',
+  '/admin/devolucao',
+]
+
 function classeLinkNav(soIcones) {
   return ({ isActive }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -189,7 +199,21 @@ function classeLinkNav(soIcones) {
 export function LayoutAdministrativo() {
   const { usuarioAtual, logout } = useAutenticacao()
   const { toast } = useToast()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [menuAberto, setMenuAberto] = useState(false)
+
+  const exibindoBusca = rotasComBusca.some((rota) =>
+    location.pathname.startsWith(rota),
+  )
+  const valorBusca = searchParams.get('q') || ''
+
+  function atualizarBusca(valor) {
+    const next = new URLSearchParams(searchParams)
+    if (valor.trim()) next.set('q', valor)
+    else next.delete('q')
+    setSearchParams(next, { replace: true })
+  }
 
   function encerrarSessao() {
     toast.info('Sessão encerrada.')
@@ -241,6 +265,18 @@ export function LayoutAdministrativo() {
           </button>
         </div>
       </header>
+
+      {exibindoBusca && (
+        <div className="border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-900 md:hidden">
+          <input
+            type="search"
+            placeholder="Buscar…"
+            value={valorBusca}
+            onChange={(e) => atualizarBusca(e.target.value)}
+            className="h-[41px] w-full rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-500 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+          />
+        </div>
+      )}
 
       {menuAberto && (
         <button
@@ -348,8 +384,19 @@ export function LayoutAdministrativo() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden items-center justify-end gap-4 bg-white px-6 py-3 dark:bg-slate-900 md:flex">
-          <div className="flex items-center gap-3">
+        <header className="hidden items-center justify-between gap-4 bg-white px-6 py-3 dark:bg-slate-900 md:flex">
+          <div className="min-w-0 flex-1">
+            {exibindoBusca && (
+              <input
+                type="search"
+                placeholder="Buscar…"
+                value={valorBusca}
+                onChange={(e) => atualizarBusca(e.target.value)}
+                className="h-[41px] w-full max-w-md rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-500 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+              />
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
             <SeletorTema />
             <NotificacoesSino />
             <MenuContaUsuario
