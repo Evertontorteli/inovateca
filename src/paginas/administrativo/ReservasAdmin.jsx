@@ -57,8 +57,8 @@ export default function ReservasAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">Reservas</h1>
-      <p className="mt-1 text-slate-600">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Reservas</h1>
+      <p className="mt-1 text-slate-600 dark:text-slate-400">
         Fila de interesse no acervo. Ao atender, gera empréstimo e baixa um exemplar.
       </p>
 

@@ -153,8 +153,8 @@ export default function PainelAdmin() {
   return (
     <div className="flex min-w-0 items-start gap-6">
       <section className="min-w-0 flex-1">
-        <h1 className="text-2xl font-semibold text-slate-900">Painel</h1>
-        <p className="mt-1 text-slate-600">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Painel</h1>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">
           Visão geral do acervo e da operação — alinhado ao fluxo: consulta, reserva,
           empréstimo, acompanhamento e devolução.
         </p>

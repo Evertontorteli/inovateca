@@ -1,24 +1,33 @@
 import { Outlet, useLocation } from 'react-router-dom'
+import { SeletorTema } from '../SeletorTema.jsx'
+import { useTema } from '../../contextos/TemaContexto.jsx'
 
 /** Páginas públicas: login, recuperação e primeiro acesso (fundo neutro, cartão central). */
 export function LayoutPublico() {
   const location = useLocation()
+  const { tema } = useTema()
   const exibirAvisoMvp = location.pathname === '/login'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-brand/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 lg:grid lg:grid-cols-2">
       <div
-        className="relative hidden lg:block"
+        className="relative hidden bg-[#fefdfe] dark:bg-[#0d1735] lg:block"
         style={{
-          backgroundColor: '#fefdfe',
-          backgroundImage: "url('/wallpaper Login.png')",
+          backgroundColor: tema === 'dark' ? '#0d1735' : '#fefdfe',
+          backgroundImage:
+            tema === 'dark'
+              ? "url('/wallpaper Login Escuro.png')"
+              : "url('/wallpaper Login.png')",
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'left bottom',
           backgroundSize: 'auto 58%',
         }}
         aria-hidden
       />
-      <div className="flex min-h-screen items-center justify-center bg-[#fefdfe] px-4 py-10 lg:justify-center lg:px-8">
+      <div className="relative flex min-h-screen items-center justify-center bg-[#fefdfe] px-4 py-10 dark:bg-[#0d1735] lg:justify-center lg:px-8">
+        <div className="absolute right-4 top-4 z-10">
+          <SeletorTema />
+        </div>
         <div className="w-full max-w-md">
           {exibirAvisoMvp && (
             <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">

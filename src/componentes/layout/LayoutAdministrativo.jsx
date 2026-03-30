@@ -319,7 +319,15 @@ export function LayoutAdministrativo() {
           <img
             src="/LogoInovaca.svg"
             alt={NOME_SISTEMA}
-            className={`h-7 min-w-0 max-w-[70%] object-contain object-left md:h-9 md:max-w-[11rem] ${
+            className={`h-7 min-w-0 max-w-[70%] object-contain object-left dark:hidden md:h-9 md:max-w-[11rem] ${
+              sidebarSoIcones ? 'md:hidden' : ''
+            }`}
+            decoding="async"
+          />
+          <img
+            src="/LogoInovacaDark.svg"
+            alt={NOME_SISTEMA}
+            className={`hidden h-7 min-w-0 max-w-[70%] object-contain object-left dark:block md:h-9 md:max-w-[11rem] ${
               sidebarSoIcones ? 'md:hidden' : ''
             }`}
             decoding="async"
