@@ -255,6 +255,10 @@ export default function CatalogoUsuario() {
         </div>
       )}
 
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {livrosComDetalhes.length} catálogos cadastrados
+      </p>
+
       <ul className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {livrosPaginados.map((l) => (
           <li

@@ -83,6 +83,10 @@ export default function MeusEmprestimosUsuario() {
         A devolução é registrada pelo administrador na {NOME_SISTEMA}.
       </p>
 
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {meus.length} empréstimos registrados
+      </p>
+
       <ul className="mt-8 space-y-3">
         {filtrados.length === 0 && (
           <li className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">

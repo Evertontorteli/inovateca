@@ -85,6 +85,10 @@ export default function MinhasReservasUsuario() {
         Acompanhe o status até a retirada na {NOME_SISTEMA}.
       </p>
 
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {minhas.length} reservas cadastradas
+      </p>
+
       <ul className="mt-8 space-y-3">
         {filtradas.length === 0 && (
           <li className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-4 py-8 text-center text-slate-500">
