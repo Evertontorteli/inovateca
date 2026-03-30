@@ -7,6 +7,8 @@ import {
   AVATAR_PADRAO_URL,
 } from '../../utilitarios/avatarsPredefinidos.js'
 
+const ITENS_POR_PAGINA = 20
+
 const formVazio = () => ({
   nome: '',
   email: '',
@@ -41,6 +43,12 @@ export default function UsuariosAdmin() {
   const [editandoId, setEditandoId] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
   const [grelhaAvataresAberta, setGrelhaAvataresAberta] = useState(false)
+  const [paginaAtual, setPaginaAtual] = useState(1)
+
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / ITENS_POR_PAGINA))
+  const pagina = Math.min(paginaAtual, totalPaginas)
+  const inicioLista = (pagina - 1) * ITENS_POR_PAGINA
+  const usuariosPaginados = usuariosFiltrados.slice(inicioLista, inicioLista + ITENS_POR_PAGINA)
 
   const passoAvatar = useCallback((dir) => {
     setForm((prev) => {
@@ -110,6 +118,14 @@ export default function UsuariosAdmin() {
       document.removeEventListener('keydown', aoTecla)
     }
   }, [modalAberto, fecharModal, passoAvatar])
+
+  useEffect(() => {
+    setPaginaAtual((p) => Math.min(p, totalPaginas))
+  }, [totalPaginas])
+
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
 
   function aoSalvar(e) {
     e.preventDefault()
@@ -403,7 +419,11 @@ export default function UsuariosAdmin() {
         </div>
       )}
 
-      <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {estado.usuarios.length} usuários cadastrados
+      </p>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <tr>
@@ -425,7 +445,7 @@ export default function UsuariosAdmin() {
                 </td>
               </tr>
             )}
-            {usuariosFiltrados.map((u) => (
+            {usuariosPaginados.map((u) => (
               <tr
                 key={u.id}
                 className="border-b border-slate-100 dark:border-slate-800 dark:text-slate-200"
@@ -487,6 +507,32 @@ export default function UsuariosAdmin() {
           </tbody>
         </table>
       </div>
+
+      {usuariosFiltrados.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

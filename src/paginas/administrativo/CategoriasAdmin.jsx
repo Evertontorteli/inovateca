@@ -171,7 +171,11 @@ export default function CategoriasAdmin() {
         </div>
       )}
 
-      <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {estado.categorias.length} categorias cadastradas
+      </p>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <tr>

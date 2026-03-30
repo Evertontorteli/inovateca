@@ -200,6 +200,10 @@ export default function LivrosAdmin() {
 
   function aoSalvar(e) {
     e.preventDefault()
+    if (!Array.isArray(form.autorIds) || form.autorIds.length === 0) {
+      toast.erro('Selecione ao menos um autor.')
+      return
+    }
     salvarLivro({ ...form, id: editandoId })
     toast.success(editandoId ? 'Livro atualizado.' : 'Livro cadastrado.')
     fecharModal()
@@ -639,7 +643,11 @@ export default function LivrosAdmin() {
         </div>
       )}
 
-      <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {livrosComDetalhes.length} livros cadastrados
+      </p>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <tr>

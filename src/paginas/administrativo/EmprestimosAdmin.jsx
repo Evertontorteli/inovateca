@@ -197,6 +197,9 @@ export default function EmprestimosAdmin() {
       )}
 
       <h2 className="mt-10 text-lg font-semibold text-slate-800">Em aberto</h2>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        {emprestimosComStatus.filter((e) => e.status === 'ativo').length} empréstimos ativos
+      </p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">

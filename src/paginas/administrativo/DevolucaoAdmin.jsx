@@ -20,11 +20,12 @@ export default function DevolucaoAdmin() {
     const base = emprestimosComStatus.filter((e) => e.status === 'ativo')
     if (!busca) return base
     return base.filter((e) => {
-      const livro =
-        estado.livros.find((l) => l.id === e.livroId)?.titulo || '—'
+      const livroInfo = estado.livros.find((l) => l.id === e.livroId)
+      const livro = livroInfo?.titulo || '—'
+      const isbn = livroInfo?.isbn || ''
       const user =
         estado.usuarios.find((u) => u.id === e.usuarioId)?.nome || '—'
-      return [livro, user].join(' ').toLowerCase().includes(busca)
+      return [livro, isbn, user].join(' ').toLowerCase().includes(busca)
     })
   }, [emprestimosComStatus, estado.livros, estado.usuarios, busca])
 
@@ -62,6 +63,10 @@ export default function DevolucaoAdmin() {
       <h1 className="text-2xl font-semibold text-slate-900">Devolução</h1>
       <p className="mt-1 text-slate-600">
         Confirme a entrega física do livro para liberar o exemplar e notificar o usuário.
+      </p>
+
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        {totalAtivos} aguardando devolução
       </p>
 
       <div className="mt-8 space-y-4">
