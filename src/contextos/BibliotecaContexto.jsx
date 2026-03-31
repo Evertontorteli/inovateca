@@ -307,14 +307,10 @@ export function BibliotecaProvedor({ children }) {
         erro = 'Livro não encontrado.'
         return prev
       }
-      if (livro.exemplaresDisponiveis < 1) {
-        erro = 'Não há exemplares disponíveis para reserva.'
-        return prev
-      }
-      const ativas = prev.reservas.filter(
-        (r) => r.usuarioId === usuarioId && r.status === 'ativa',
+      const reservasAbertas = prev.reservas.filter(
+        (r) => r.usuarioId === usuarioId && (r.status === 'ativa' || r.status === 'fila'),
       )
-      if (ativas.length >= prev.configuracao.maxReservasPorUsuario) {
+      if (reservasAbertas.length >= prev.configuracao.maxReservasPorUsuario) {
         erro = `Limite de ${prev.configuracao.maxReservasPorUsuario} reservas ativas atingido.`
         return prev
       }
@@ -322,24 +318,28 @@ export function BibliotecaProvedor({ children }) {
         (r) =>
           r.usuarioId === usuarioId &&
           r.livroId === livroId &&
-          r.status === 'ativa',
+          (r.status === 'ativa' || r.status === 'fila'),
       )
       if (duplicada) {
-        erro = 'Você já possui reserva ativa para este livro.'
+        erro = 'Você já possui uma reserva para este livro.'
         return prev
       }
+      const statusReserva = livro.exemplaresDisponiveis > 0 ? 'ativa' : 'fila'
       const reserva = {
         id: novoId(),
         livroId,
         usuarioId,
-        status: 'ativa',
+        status: statusReserva,
         criadaEm: new Date().toISOString(),
       }
       const notif = {
         id: novoId(),
         usuarioId,
-        titulo: 'Reserva confirmada',
-        mensagem: `Sua reserva do livro "${livro.titulo}" foi registrada.`,
+        titulo: statusReserva === 'ativa' ? 'Reserva confirmada' : 'Fila de espera',
+        mensagem:
+          statusReserva === 'ativa'
+            ? `Sua reserva do livro "${livro.titulo}" foi registrada.`
+            : `Você entrou na fila de espera do livro "${livro.titulo}".`,
         tipo: 'reserva',
         lida: false,
         criadaEm: new Date().toISOString(),
@@ -357,14 +357,23 @@ export function BibliotecaProvedor({ children }) {
     let erro = null
     comPersistencia(setEstado, (prev) => {
       const reserva = prev.reservas.find((r) => r.id === reservaId)
-      if (!reserva || reserva.status !== 'ativa') {
-        erro = 'Reserva não encontrada ou não está ativa.'
+      if (!reserva || (reserva.status !== 'ativa' && reserva.status !== 'fila')) {
+        erro = 'Reserva não encontrada ou já foi atendida.'
         return prev
       }
       const livro = prev.livros.find((l) => l.id === reserva.livroId)
       if (!livro || livro.exemplaresDisponiveis < 1) {
         erro = 'Sem exemplar disponível para empréstimo.'
         return prev
+      }
+      if (reserva.status === 'fila') {
+        const filaDoLivro = prev.reservas
+          .filter((r) => r.livroId === reserva.livroId && r.status === 'fila')
+          .sort((a, b) => new Date(a.criadaEm) - new Date(b.criadaEm))
+        if (filaDoLivro[0]?.id !== reserva.id) {
+          erro = 'Atenda primeiro o usuário mais antigo da fila deste livro.'
+          return prev
+        }
       }
       const prazo = prev.configuracao.prazoEmprestimoDias
       const hoje = new Date()

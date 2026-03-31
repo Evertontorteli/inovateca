@@ -106,6 +106,8 @@ export default function MinhasReservasUsuario() {
                 className={`absolute right-4 top-4 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${
                   r.status === 'ativa'
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                    : r.status === 'fila'
+                      ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300'
                     : r.status === 'cancelada'
                       ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
                       : 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300'
@@ -150,7 +152,7 @@ export default function MinhasReservasUsuario() {
                   </p>
                 </div>
               </div>
-              {r.status === 'ativa' && (
+              {(r.status === 'ativa' || r.status === 'fila') && (
                 <button
                   type="button"
                   className="botao-formulario-secundario px-3 py-2 text-sm"

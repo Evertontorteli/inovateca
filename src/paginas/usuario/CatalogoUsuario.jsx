@@ -23,7 +23,7 @@ function IconeEstrela({ ativa }) {
 /** Consulta ao catálogo e reserva de exemplares (autoatendimento). */
 export default function CatalogoUsuario() {
   const { usuarioAtual } = useAutenticacao()
-  const { livrosComDetalhes, criarReserva, avaliarLivro, removerAvaliacaoLivro } = useBiblioteca()
+  const { estado, livrosComDetalhes, criarReserva, avaliarLivro, removerAvaliacaoLivro } = useBiblioteca()
   const { toast } = useToast()
   const [searchParams] = useSearchParams()
   const busca = (searchParams.get('q') || '').toLowerCase()
@@ -32,6 +32,7 @@ export default function CatalogoUsuario() {
   const [filtroAutor, setFiltroAutor] = useState('todos')
   const [somenteDisponiveis, setSomenteDisponiveis] = useState(false)
   const [modalFiltro, setModalFiltro] = useState(null)
+  const [imagemZoom, setImagemZoom] = useState(null)
   const [paginaAtual, setPaginaAtual] = useState(1)
 
   const categoriasFiltro = Array.from(
@@ -68,6 +69,15 @@ export default function CatalogoUsuario() {
   const pagina = Math.min(paginaAtual, totalPaginas)
   const inicio = (pagina - 1) * ITENS_POR_PAGINA
   const livrosPaginados = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA)
+  const reservasAbertasPorLivro = new Set(
+    estado.reservas
+      .filter(
+        (r) =>
+          r.usuarioId === usuarioAtual?.id &&
+          (r.status === 'ativa' || r.status === 'fila'),
+      )
+      .map((r) => r.livroId),
+  )
 
   useEffect(() => {
     setPaginaAtual(1)
@@ -80,6 +90,19 @@ export default function CatalogoUsuario() {
       return
     }
     toast.success('Reserva registrada.')
+  }
+
+  function entrarNaFila(livro) {
+    const confirmar = confirm(
+      `Este livro está indisponível. Deseja entrar na fila de espera para "${livro.titulo}"?`,
+    )
+    if (!confirmar) return
+    const r = criarReserva(usuarioAtual.id, livro.id)
+    if (!r.ok) {
+      toast.erro(r.erro)
+      return
+    }
+    toast.success('Você entrou na fila de espera.')
   }
 
   function avaliar(livroId, nota, notaAtual) {
@@ -101,6 +124,26 @@ export default function CatalogoUsuario() {
   function fecharModalFiltro() {
     setModalFiltro(null)
   }
+
+  function abrirZoom(livro) {
+    if (!livro?.capaUrl) return
+    setImagemZoom({ src: livro.capaUrl, titulo: livro.titulo })
+  }
+
+  function fecharZoom() {
+    setImagemZoom(null)
+  }
+
+  useEffect(() => {
+    if (!imagemZoom) return undefined
+    function aoTecla(e) {
+      if (e.key === 'Escape') fecharZoom()
+    }
+    document.addEventListener('keydown', aoTecla)
+    return () => {
+      document.removeEventListener('keydown', aoTecla)
+    }
+  }, [imagemZoom])
 
   function tituloModalFiltro() {
     if (modalFiltro === 'letra') return 'Selecionar letra'
@@ -167,7 +210,7 @@ export default function CatalogoUsuario() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Catálogo</h1>
       <p className="mt-1 text-slate-600">
-        Busque por título ou autor e reserve quando houver exemplar disponível.
+        Busque por título ou autor e reserve; se estiver indisponível, entre na fila de espera.
       </p>
       <div className="mt-4 overflow-x-auto">
         <div className="flex min-w-max items-center gap-2 pb-1">
@@ -255,6 +298,36 @@ export default function CatalogoUsuario() {
         </div>
       )}
 
+      {imagemZoom && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/80" aria-hidden />
+          <div className="relative z-10 w-full max-w-4xl rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="truncate pr-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                {imagemZoom.titulo}
+              </p>
+              <button
+                type="button"
+                className="rounded-md p-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                onClick={fecharZoom}
+                aria-label="Fechar"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex max-h-[80vh] items-center justify-center overflow-auto rounded-lg bg-slate-100 p-2 dark:bg-slate-800">
+              <img
+                src={imagemZoom.src}
+                alt={`Capa ampliada: ${imagemZoom.titulo}`}
+                className="h-auto max-h-[76vh] w-auto max-w-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
         {livrosComDetalhes.length} catálogos cadastrados
       </p>
@@ -263,15 +336,33 @@ export default function CatalogoUsuario() {
         {livrosPaginados.map((l) => (
           <li
             key={l.id}
-            className="mx-auto flex w-full max-w-[15.5rem] flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900"
+            className="mx-auto flex w-full max-w-[12rem] flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900"
           >
-            <div className="aspect-[2/3] max-h-44 w-full shrink-0 bg-slate-100 dark:bg-slate-800">
+            <div className="relative h-36 w-full shrink-0 bg-slate-100 dark:bg-slate-800">
               {l.capaUrl ? (
-                <img
-                  src={l.capaUrl}
-                  alt={`Capa: ${l.titulo}`}
-                  className="h-full w-full object-cover"
-                />
+                <>
+                  <img
+                    src={l.capaUrl}
+                    alt={`Capa: ${l.titulo}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    className="absolute bottom-2 right-2 rounded-full bg-white/90 p-1.5 text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-105 hover:bg-white hover:shadow-[0_12px_28px_rgba(15,23,42,0.34)] dark:bg-white/85 dark:text-slate-800 dark:ring-white/15 dark:shadow-[0_10px_26px_rgba(2,6,23,0.5)] dark:hover:shadow-[0_14px_30px_rgba(2,6,23,0.6)]"
+                    aria-label={`Ampliar capa de ${l.titulo}`}
+                    title="Ampliar capa"
+                    onClick={() => abrirZoom(l)}
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM10.5 8v5m-2.5-2.5h5"
+                      />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <div className="flex h-full items-center justify-center px-4 text-center text-xs text-slate-400 dark:text-slate-500">
                   Sem capa
@@ -330,8 +421,18 @@ export default function CatalogoUsuario() {
                 className="mt-4 rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-600"
                 onClick={() => reservar(l.id)}
               >
-                {l.exemplaresDisponiveis > 0 ? 'Reservar' : 'Indisponível'}
+                Reservar
               </button>
+              {l.exemplaresDisponiveis < 1 && (
+                <button
+                  type="button"
+                  disabled={reservasAbertasPorLivro.has(l.id)}
+                  className="mt-2 text-sm font-semibold text-brand hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline dark:disabled:text-slate-500"
+                  onClick={() => entrarNaFila(l)}
+                >
+                  {reservasAbertasPorLivro.has(l.id) ? 'Já está na fila' : 'Entrar na fila'}
+                </button>
+              )}
             </div>
           </li>
         ))}

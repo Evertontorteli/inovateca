@@ -16,20 +16,25 @@ export default function ReservasAdmin() {
   const { toast } = useToast()
   const [searchParams] = useSearchParams()
   const busca = (searchParams.get('q') || '').toLowerCase().trim()
+  const [filtroStatus, setFiltroStatus] = useState('todas')
 
   const linhas = useMemo(() => {
     const sorted = [...estado.reservas].sort(
       (a, b) => new Date(b.criadaEm) - new Date(a.criadaEm),
     )
-    if (!busca) return sorted
-    return sorted.filter((r) => {
+    const porStatus =
+      filtroStatus === 'todas'
+        ? sorted
+        : sorted.filter((r) => r.status === filtroStatus)
+    if (!busca) return porStatus
+    return porStatus.filter((r) => {
       const livro =
         estado.livros.find((l) => l.id === r.livroId)?.titulo || '—'
       const user =
         estado.usuarios.find((u) => u.id === r.usuarioId)?.nome || '—'
       return [livro, user, r.status].join(' ').toLowerCase().includes(busca)
     })
-  }, [estado.reservas, estado.livros, estado.usuarios, busca])
+  }, [estado.reservas, estado.livros, estado.usuarios, busca, filtroStatus])
 
   const [paginaAtual, setPaginaAtual] = useState(1)
   const totalPaginas = Math.max(1, Math.ceil(linhas.length / ITENS_POR_PAGINA))
@@ -54,6 +59,9 @@ export default function ReservasAdmin() {
   function nomeUsuario(id) {
     return estado.usuarios.find((u) => u.id === id)?.nome || '—'
   }
+  function exemplaresDisponiveis(id) {
+    return estado.livros.find((l) => l.id === id)?.exemplaresDisponiveis || 0
+  }
 
   return (
     <div>
@@ -62,9 +70,46 @@ export default function ReservasAdmin() {
         Fila de interesse no acervo. Ao atender, gera empréstimo e baixa um exemplar.
       </p>
 
-      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
-        {estado.reservas.length} reservas cadastradas
-      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {estado.reservas.length} reservas cadastradas
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+              filtroStatus === 'todas'
+                ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+            }`}
+            onClick={() => setFiltroStatus('todas')}
+          >
+            Todas
+          </button>
+          <button
+            type="button"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+              filtroStatus === 'atendida'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-emerald-900/60'
+            }`}
+            onClick={() => setFiltroStatus('atendida')}
+          >
+            Atendida
+          </button>
+          <button
+            type="button"
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+              filtroStatus === 'fila'
+                ? 'bg-violet-600 text-white'
+                : 'bg-violet-100 text-violet-800 hover:bg-violet-200 dark:bg-violet-900/40 dark:text-violet-200 dark:hover:bg-violet-900/60'
+            }`}
+            onClick={() => setFiltroStatus('fila')}
+          >
+            Fila de espera
+          </button>
+        </div>
+      </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 shadow-sm">
         <table className="min-w-full text-left text-sm">
@@ -109,8 +154,10 @@ export default function ReservasAdmin() {
                   <span
                     className={
                       r.status === 'ativa'
-                        ? 'rounded-full bg-amber-100 px-2 py-0.5 text-amber-900'
-                        : 'text-slate-600'
+                        ? 'rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200'
+                        : r.status === 'fila'
+                          ? 'rounded-full bg-violet-100 px-2 py-0.5 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200'
+                          : 'rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
                     }
                   >
                     {r.status}
@@ -120,12 +167,17 @@ export default function ReservasAdmin() {
                   {formatarDataHora(r.criadaEm)}
                 </td>
                 <td className="px-4 py-3">
-                  {r.status === 'ativa' && (
-                    <>
+                  {(r.status === 'ativa' || r.status === 'fila') && (
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        className="text-brand hover:underline"
+                        className="rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-600"
+                        disabled={exemplaresDisponiveis(r.livroId) < 1}
                         onClick={() => {
+                          const confirmar = confirm(
+                            `Tem certeza que deseja atender (emprestar) o livro "${nomeLivro(r.livroId)}"?`,
+                          )
+                          if (!confirmar) return
                           const res = atenderReservaComEmprestimo(r.id)
                           if (!res.ok) {
                             toast.erro(res.erro)
@@ -134,11 +186,11 @@ export default function ReservasAdmin() {
                           toast.success('Reserva atendida e empréstimo registrado.')
                         }}
                       >
-                        Atender (emprestar)
+                        {r.status === 'fila' ? 'Atender fila' : 'Atender (emprestar)'}
                       </button>
                       <button
                         type="button"
-                        className="ml-2 text-slate-600 hover:underline"
+                        className="botao-formulario-secundario px-3 py-1.5 text-xs font-semibold"
                         onClick={() => {
                           cancelarReserva(r.id)
                           toast.info('Reserva cancelada.')
@@ -146,7 +198,7 @@ export default function ReservasAdmin() {
                       >
                         Cancelar
                       </button>
-                    </>
+                    </div>
                   )}
                 </td>
               </tr>

@@ -159,7 +159,7 @@ export default function PainelAdmin() {
           empréstimo, acompanhamento e devolução.
         </p>
 
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="mt-8 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))]">
           {cards.map((c) => (
             <li key={c.label}>
               <Link

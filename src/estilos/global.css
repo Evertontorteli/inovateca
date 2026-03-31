@@ -50,7 +50,7 @@ body {
   }
 
   .botao-formulario-secundario {
-    @apply inline-flex items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none transition-shadow;
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm outline-none transition-colors;
     @apply hover:bg-slate-50 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30;
     @apply dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
   }
