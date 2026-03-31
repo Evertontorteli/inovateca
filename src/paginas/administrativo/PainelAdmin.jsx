@@ -114,7 +114,7 @@ export default function PainelAdmin() {
     {
       label: 'Usuários cadastrados',
       valor: stats.usuarios,
-      to: '/admin/usuarios',
+      to: '/admin/configuracoes?aba=usuarios',
       Icon: IconeUsuariosSolid,
       cor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
       numero: 'text-indigo-700 dark:text-indigo-300',
@@ -237,7 +237,10 @@ export default function PainelAdmin() {
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Top {rankingLeitores.length || 0}
             </span>
-            <Link to="/admin/usuarios" className="text-xs font-semibold text-brand hover:underline">
+            <Link
+              to="/admin/configuracoes?aba=usuarios"
+              className="text-xs font-semibold text-brand hover:underline"
+            >
               Ver usuários
             </Link>
           </div>

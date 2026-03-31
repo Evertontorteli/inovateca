@@ -64,19 +64,6 @@ function IconeAutores() {
   )
 }
 
-function IconeUsuarios() {
-  return (
-    <svg className={icone} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-      />
-    </svg>
-  )
-}
-
 function IconeReservas() {
   return (
     <svg className={icone} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -156,15 +143,29 @@ function IconeSair() {
   )
 }
 
-const links = [
-  { to: '/admin/painel', label: 'Painel', Icon: IconePainel },
-  { to: '/admin/livros', label: 'Livros', Icon: IconeLivros },
-  { to: '/admin/categorias', label: 'Categorias', Icon: IconeCategorias },
-  { to: '/admin/autores', label: 'Autores', Icon: IconeAutores },
-  { to: '/admin/usuarios', label: 'Usuários', Icon: IconeUsuarios },
-  { to: '/admin/reservas', label: 'Reservas', Icon: IconeReservas },
-  { to: '/admin/emprestimos', label: 'Empréstimos', Icon: IconeEmprestimos },
-  { to: '/admin/devolucao', label: 'Devolução', Icon: IconeDevolucao },
+/** Blocos do menu: opcionalmente com título de seção (ex.: Cadastros). */
+const secoesNav = [
+  {
+    links: [
+      { to: '/admin/painel', label: 'Painel', Icon: IconePainel, end: true },
+      { to: '/admin/livros', label: 'Livros', Icon: IconeLivros },
+    ],
+  },
+  {
+    titulo: 'Circulação',
+    links: [
+      { to: '/admin/reservas', label: 'Reservas', Icon: IconeReservas },
+      { to: '/admin/emprestimos', label: 'Empréstimos', Icon: IconeEmprestimos },
+      { to: '/admin/devolucao', label: 'Devolução', Icon: IconeDevolucao },
+    ],
+  },
+  {
+    titulo: 'Cadastros',
+    links: [
+      { to: '/admin/categorias', label: 'Categorias', Icon: IconeCategorias },
+      { to: '/admin/autores', label: 'Autores', Icon: IconeAutores },
+    ],
+  },
 ]
 
 const linkConfiguracoes = {
@@ -177,7 +178,6 @@ const CHAVE_SIDEBAR_ICONES = 'inovateca_admin_sidebar_icones'
 
 const rotasComBusca = [
   '/admin/livros',
-  '/admin/usuarios',
   '/admin/categorias',
   '/admin/autores',
   '/admin/reservas',
@@ -371,24 +371,38 @@ export function LayoutAdministrativo() {
           </button>
         </div>
         <nav
-          className={`flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`}
+          className={`flex flex-1 flex-col gap-0 overflow-y-auto p-3 ${sidebarSoIcones ? 'md:px-2 md:py-2' : ''}`}
           onClick={() => setMenuAberto(false)}
         >
-          {links.map((l) => {
-            const { Icon } = l
-            return (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                className={classeLinkNav(sidebarSoIcones)}
-                end={l.to === '/admin/painel'}
-                title={l.label}
-              >
-                <Icon />
-                <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{l.label}</span>
-              </NavLink>
-            )
-          })}
+          {secoesNav.map((secao, idx) => (
+            <div
+              key={secao.titulo ?? `sec-${idx}`}
+              className={`flex flex-col gap-0.5 ${idx > 0 ? 'mt-3' : ''}`}
+            >
+              {secao.titulo ? (
+                <p
+                  className={`px-3 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 ${sidebarSoIcones ? 'md:sr-only' : ''}`}
+                >
+                  {secao.titulo}
+                </p>
+              ) : null}
+              {secao.links.map((l) => {
+                const { Icon } = l
+                return (
+                  <NavLink
+                    key={l.to}
+                    to={l.to}
+                    className={classeLinkNav(sidebarSoIcones)}
+                    end={Boolean(l.end)}
+                    title={l.label}
+                  >
+                    <Icon />
+                    <span className={sidebarSoIcones ? 'md:sr-only' : ''}>{l.label}</span>
+                  </NavLink>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         <div

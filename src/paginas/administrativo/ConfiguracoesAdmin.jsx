@@ -4,6 +4,7 @@ import { useAutenticacao } from '../../contextos/AutenticacaoContexto.jsx'
 import { useBiblioteca } from '../../contextos/BibliotecaContexto.jsx'
 import { useToast } from '../../contextos/ToastContexto.jsx'
 import { formatarDataHora } from '../../utilitarios/datas.js'
+import UsuariosAdmin from './UsuariosAdmin.jsx'
 
 /** Parâmetros de regras: prazo de empréstimo e limites de reserva. */
 export default function ConfiguracoesAdmin() {
@@ -17,7 +18,8 @@ export default function ConfiguracoesAdmin() {
   const { toast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const abaDaUrl = searchParams.get('aba')
-  const abaInicial = abaDaUrl === 'notificacoes' ? 'notificacoes' : 'parametros'
+  const abasValidas = new Set(['parametros', 'notificacoes', 'usuarios'])
+  const abaInicial = abasValidas.has(abaDaUrl) ? abaDaUrl : 'parametros'
   const [aba, setAba] = useState(abaInicial)
   const [prazoEmprestimoDias, setPrazoEmprestimoDias] = useState(
     estado.configuracao.prazoEmprestimoDias,
@@ -37,8 +39,8 @@ export default function ConfiguracoesAdmin() {
   function trocarAba(proxima) {
     setAba(proxima)
     const next = new URLSearchParams(searchParams)
-    if (proxima === 'notificacoes') next.set('aba', 'notificacoes')
-    else next.delete('aba')
+    if (proxima === 'parametros') next.delete('aba')
+    else next.set('aba', proxima)
     setSearchParams(next, { replace: true })
   }
 
@@ -81,6 +83,17 @@ export default function ConfiguracoesAdmin() {
             onClick={() => trocarAba('notificacoes')}
           >
             Notificações
+          </button>
+          <button
+            type="button"
+            className={`border-b-2 pb-1 text-sm font-semibold transition-colors ${
+              aba === 'usuarios'
+                ? 'border-[#0084E1] text-[#0084E1] dark:border-sky-400 dark:text-sky-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
+            onClick={() => trocarAba('usuarios')}
+          >
+            Usuários
           </button>
         </div>
       </div>
@@ -181,6 +194,12 @@ export default function ConfiguracoesAdmin() {
           <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             Dica: você também pode marcar como lida clicando na notificação pelo sino no topo.
           </p>
+        </div>
+      )}
+
+      {aba === 'usuarios' && (
+        <div className="mt-6">
+          <UsuariosAdmin />
         </div>
       )}
     </div>

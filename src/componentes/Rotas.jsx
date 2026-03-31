@@ -17,7 +17,6 @@ import EmprestimosAdmin from '../paginas/administrativo/EmprestimosAdmin.jsx'
 import LivrosAdmin from '../paginas/administrativo/LivrosAdmin.jsx'
 import PainelAdmin from '../paginas/administrativo/PainelAdmin.jsx'
 import ReservasAdmin from '../paginas/administrativo/ReservasAdmin.jsx'
-import UsuariosAdmin from '../paginas/administrativo/UsuariosAdmin.jsx'
 
 import NotificacoesPagina from '../paginas/compartilhada/NotificacoesPagina.jsx'
 import CatalogoUsuario from '../paginas/usuario/CatalogoUsuario.jsx'
@@ -49,7 +48,10 @@ export function Rotas() {
         <Route path="livros" element={<LivrosAdmin />} />
         <Route path="categorias" element={<CategoriasAdmin />} />
         <Route path="autores" element={<AutoresAdmin />} />
-        <Route path="usuarios" element={<UsuariosAdmin />} />
+        <Route
+          path="usuarios"
+          element={<Navigate to="/admin/configuracoes?aba=usuarios" replace />}
+        />
         <Route path="reservas" element={<ReservasAdmin />} />
         <Route path="emprestimos" element={<EmprestimosAdmin />} />
         <Route path="devolucao" element={<DevolucaoAdmin />} />
